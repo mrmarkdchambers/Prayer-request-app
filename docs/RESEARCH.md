@@ -105,3 +105,15 @@ _Compiled 2026-10-11 from web search results: app store listings, third-party re
 - https://news.yahoo.com/nothing-sacred-apps-sell-prayers-153708345.html
 - https://faith.tools/app/seedling-prayer-platform
 - https://www.text-em-all.com/prayer-requests
+
+## 8. Decisions (2026-10-11)
+- **Platform:** start as a web app so we can tweak things, then package for the app stores later.
+- **Audience:** personal use and small groups. Church admin tools are out of scope for now.
+- **Pricing:** every feature is free. Funding comes from optional donations (see below).
+
+### Donation model
+- A web app can link to any payment provider with no app-store rules or fees. Options: Stripe Payment Links (~2.9% + 30¢), Ko-fi (0% on one-off tips), Buy Me a Coffee, GitHub Sponsors, Open Collective.
+- Offer one-off and monthly giving. Monthly donors get a "Supporter" badge but no extra features.
+- Ask gently. Keep a support page in Settings, plus at most one occasional prompt at a happy moment (for example after a prayer is marked answered). Never ask on app open, which reviewers called a "cash grab" in Echo.
+- Running costs are near zero at small-group scale (Supabase and Vercel/Netlify free tiers), so donations only need to cover growth.
+- **Later, for app stores:** Apple and Google only allow external donation links from registered nonprofits. Otherwise donations must be in-app "tips" with a 15–30% store cut. Donations are tax-deductible only if made through a 501(c)(3) or a fiscal sponsor.
