@@ -19,7 +19,14 @@ See [docs/RESEARCH.md](docs/RESEARCH.md) for the market research and feature pla
 - **Installable and offline**: a PWA with dark mode, responsive layout, keyboard and screen-reader support.
 - **Support page**: optional donation links. Everything is free, and no feature is ever locked.
 
-All data is stored in the browser (`localStorage`). There is no account and no server yet.
+### Accounts, sync and groups (optional, needs Supabase)
+
+- **Sign in with a 6-digit email code**: no password. Prayers made before signing in are added to the account.
+- **Sync across devices**: works offline first. Changes upload a moment after you make them, and also when you come back online or return to the app. If the same prayer changed on two devices, the most recent change wins. Signing out removes your prayers from the device but not from your account.
+- **Small groups**: create a group, invite people with a link or QR code, and choose for each request whether only you see it or a group does too. Members tap "I prayed" (once a day per request), and the person who asked sees "You've been prayed for" on Today. Group leaders can rename the group, remove members, reset the invite link, or delete the group.
+- **Privacy**: enforced in the database (row-level security), not just the app. Only you can read your prayer rows. Group members see a shared request's title, details, updates and answer, never your follow-up dates, schedules or prayer counts. Members see your chosen display name, never your email. Leaving or deleting a group makes your shared requests private again. Signed-out visitors can read nothing.
+
+Without Supabase settings, the app runs entirely in the browser (`localStorage`), and Groups and account features are hidden.
 
 ## Development
 
@@ -30,6 +37,30 @@ npm test           # unit tests
 npm run typecheck
 npm run build      # production build in dist/
 ```
+
+### Running the backend locally
+
+Requires Docker.
+
+```bash
+npx supabase start            # starts Postgres, Auth and the API, and applies supabase/migrations
+npx supabase status           # shows the local API URL and anon key
+```
+
+Put the local URL and anon key in `.env.local` as `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`, then run `npm run dev`. Sign-in emails go to the local mail viewer at http://127.0.0.1:54324.
+
+`npm run test:integration` runs the backend tests (privacy rules, group permissions, two-device sync) against the local stack.
+
+### Setting up Supabase for real use
+
+1. Create a free project at [supabase.com](https://supabase.com).
+2. Apply the database schema. Either:
+   - run `npx supabase login`, `npx supabase link --project-ref <your-project-ref>`, then `npx supabase db push`, or
+   - paste `supabase/migrations/20261011000000_init.sql` into the dashboard's SQL Editor and run it.
+3. In **Authentication → URL Configuration**, set the Site URL to where the app is hosted, and add it to Redirect URLs.
+4. In **Authentication → Email Templates**, edit both **Magic Link** and **Confirm signup** so they include the code. Copy the body from `supabase/templates/magic_link.html`, which uses `{{ .Token }}`. Without this step, emails contain only a link. The link doesn't open inside an installed app, so people need the code.
+5. Supabase's built-in email service only sends a few emails per hour. Before inviting real users, set up your own email sender under **Project Settings → Authentication → SMTP**. Resend, Postmark and Amazon SES all work, and most have a free tier.
+6. Copy the Project URL and the anon (publishable) key from **Project Settings → API** into `.env` (see `.env.example`), then rebuild.
 
 ### Donation links
 
@@ -51,7 +82,10 @@ With no links set, the Support page says donations aren't set up yet, and the oc
 ```
 src/lib/        Pure logic: types, reducer, session rotation, tags, bulk parsing,
                 stats, export/import. Covered by src/lib/logic.test.ts
-src/lib/storage.ts  Repository interface. Swap in a synced backend here.
+src/lib/sync.ts Pure sync rules: what to upload, how to merge pulled changes
+src/sync/       Supabase client, row mapping, API calls, account and sync provider.
+                integration.test.ts checks the backend against a real database
+supabase/       Database schema and row-level security (migrations/), local config
 src/pages/      Today, Prayers, Prayer detail, Session, Answered, Settings, Support, Print
 src/components/ Shared UI
 public/sw.js    Offline service worker
@@ -59,7 +93,7 @@ public/sw.js    Offline service worker
 
 ## Roadmap
 
-1. **Accounts and sync** (Supabase): sign in with an email link, sync across devices, real push reminders.
-2. **Small groups**: invite by link or QR code, shared requests, per-request visibility (private, group, or public), an "I prayed" counter that notifies the requester, and a weekly group summary.
-3. Voice entry, home-screen widgets, subscribing to church or ministry prayer feeds.
-4. App store packaging with Capacitor.
+- Done: accounts, sync, small groups, the "I prayed" counter, and the "you've been prayed for" view.
+- Next: push notifications (reminders and "someone prayed for you" while the app is closed) and a weekly email summary for each group. Both need a small server function.
+- Later: voice entry, home-screen widgets, subscribing to church or ministry prayer feeds, a moderated public prayer wall.
+- Then: app store packaging with Capacitor.

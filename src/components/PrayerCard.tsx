@@ -9,7 +9,10 @@ export function PrayerCard({ prayer, onTag }: { prayer: Prayer; onTag?: (tag: st
       <Link to={`/prayers/${prayer.id}`} className="card-link">
         <div className="card-head">
           <h3>{prayer.title}</h3>
-          {prayer.status !== 'active' && <span className={`badge badge-${prayer.status}`}>{prayer.status}</span>}
+          <span className="row badges">
+            {prayer.groupId && <span className="badge badge-shared">shared</span>}
+            {prayer.status !== 'active' && <span className={`badge badge-${prayer.status}`}>{prayer.status}</span>}
+          </span>
         </div>
         {prayer.person && <p className="person">for {prayer.person}</p>}
         {latest && <p className="latest">Update: {latest.text}</p>}

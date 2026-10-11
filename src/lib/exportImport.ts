@@ -3,8 +3,10 @@ import { createPrayer } from './prayers';
 import { uniqueTags } from './tags';
 import { newId } from './util';
 
+/** A portable backup: sync bookkeeping and group sharing are account-specific, so they're left out. */
 export function toJson(data: AppData): string {
-  return JSON.stringify(data, null, 2);
+  const { version, settings } = data;
+  return JSON.stringify({ version, settings, prayers: data.prayers.map((p) => ({ ...p, groupId: null })) }, null, 2);
 }
 
 const STATUSES: Status[] = ['active', 'answered', 'archived'];
@@ -58,7 +60,19 @@ function normalizePrayer(v: unknown): Prayer | null {
             text: str(u.text),
           }))
       : [],
+    groupId: typeof o.groupId === 'string' ? o.groupId : null,
   };
+}
+
+function normalizeSync(v: unknown): AppData['sync'] {
+  if (!v || typeof v !== 'object') return undefined;
+  const o = v as Record<string, unknown>;
+  if (typeof o.userId !== 'string') return undefined;
+  const hashes: Record<string, string> = {};
+  if (o.hashes && typeof o.hashes === 'object') {
+    for (const [k, h] of Object.entries(o.hashes as Record<string, unknown>)) if (typeof h === 'string') hashes[k] = h;
+  }
+  return { userId: o.userId, cursor: typeof o.cursor === 'string' ? o.cursor : null, hashes };
 }
 
 /** Accepts anything parsed from JSON and returns valid app data, dropping what it can't use. */
@@ -79,6 +93,7 @@ export function normalizeData(raw: unknown): AppData {
       reminderTime: typeof s.reminderTime === 'string' && /^\d{2}:\d{2}$/.test(s.reminderTime) ? s.reminderTime : DEFAULT_SETTINGS.reminderTime,
       supportPromptDismissed: s.supportPromptDismissed === true,
     },
+    ...(normalizeSync(o.sync) ? { sync: normalizeSync(o.sync) } : {}),
   };
 }
 

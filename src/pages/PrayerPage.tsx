@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useStore } from '../store';
 import { scheduleLabel } from '../lib/prayers';
@@ -6,6 +6,22 @@ import { waitedLabel, formatDate, formatRelative, isSameDay } from '../lib/util'
 import { PrayerForm } from '../components/PrayerForm';
 import { Dialog } from '../components/Dialog';
 import { Icon } from '../components/Icon';
+import { useAccount } from '../sync/AccountProvider';
+import { supabase } from '../sync/client';
+import * as api from '../sync/api';
+
+/** For a request shared with a group: who's been praying. */
+function useIntercessions(prayerId: string | undefined, shared: boolean, refreshKey: unknown) {
+  const [list, setList] = useState<api.Intercession[] | null>(null);
+  useEffect(() => {
+    if (!supabase || !prayerId || !shared) {
+      setList(null);
+      return;
+    }
+    api.intercessionsFor(supabase, prayerId).then(setList, () => setList(null));
+  }, [prayerId, shared, refreshKey]);
+  return list;
+}
 
 export function PrayerPage() {
   const { id } = useParams();
@@ -17,6 +33,9 @@ export function PrayerPage() {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [answerNote, setAnswerNote] = useState('');
   const [updateText, setUpdateText] = useState('');
+  const account = useAccount();
+  const intercessions = useIntercessions(prayer?.id, !!prayer?.groupId && !!account.userId, account.lastSynced);
+  const sharedWith = prayer?.groupId ? account.groups?.find((g) => g.id === prayer.groupId) : undefined;
 
   if (!prayer) {
     return (
@@ -40,6 +59,7 @@ export function PrayerPage() {
             scripture: prayer.scripture,
             schedule: prayer.schedule,
             followUpOn: prayer.followUpOn,
+            groupId: prayer.groupId,
           }}
           submitLabel="Save"
           onSubmit={(v) => {
@@ -82,6 +102,26 @@ export function PrayerPage() {
           </div>
         )}
       </header>
+
+      {prayer.groupId && (
+        <p className="shared-note">
+          <Icon name="users" size={16} />{' '}
+          {sharedWith ? (
+            <>
+              Shared with <Link to={`/groups/${sharedWith.id}`}>{sharedWith.name}</Link>
+            </>
+          ) : (
+            'Shared with a group'
+          )}
+          {intercessions && intercessions.length > 0 && (
+            <>
+              {' '}
+              · prayed for by {[...new Set(intercessions.map((i) => i.displayName))].join(', ')} ({intercessions.length}{' '}
+              {intercessions.length === 1 ? 'time' : 'times'})
+            </>
+          )}
+        </p>
+      )}
 
       {prayer.details && <p className="details">{prayer.details}</p>}
       {prayer.scripture && <blockquote className="scripture">{prayer.scripture}</blockquote>}

@@ -276,3 +276,25 @@ span.chip { cursor: default; }
   body { background: #fff; color: #000; }
   .main { padding: 0; }
 }
+
+/* ---------- Accounts & groups ---------- */
+.error { color: var(--danger); }
+.grow { flex: 1; }
+.align-end { align-self: flex-end; }
+.align-start { align-self: flex-start; }
+.list-plain { list-style: none; margin: 0; padding: 0; }
+.group-link { display: flex; justify-content: space-between; align-items: center; gap: 12px; text-decoration: none; color: var(--text); }
+.group-link:hover strong { color: var(--primary); }
+.members li { padding: 6px 0; border-bottom: 1px solid var(--border); }
+.members li:last-child { border-bottom: 0; }
+.qr { width: 200px; max-width: 100%; background: #fff; padding: 8px; border-radius: 10px; }
+.qr svg { display: block; width: 100%; height: auto; }
+.prayed-badge { display: inline-flex; align-items: center; gap: 6px; color: var(--success); font-weight: 600; min-height: 44px; }
+.answer-note { color: var(--success); }
+.badges { gap: 6px; }
+.badge-shared { background: var(--primary-soft); color: var(--primary); }
+.shared-note { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; color: var(--muted); font-size: 0.92rem; }
+.prayed-for-you { display: flex; flex-direction: column; gap: 10px; background: var(--primary-soft); border-color: transparent; }
+.prayed-for-you h2 { display: flex; align-items: center; gap: 8px; }
+.prayed-for-you .icon { color: var(--danger); }
+.name-prompt { background: var(--primary-soft); border-color: transparent; }

@@ -1,5 +1,11 @@
-import { HashRouter, NavLink, Route, Routes } from 'react-router-dom';
+import { useEffect } from 'react';
+import { HashRouter, NavLink, Route, Routes, useNavigate } from 'react-router-dom';
 import { StoreProvider } from './store';
+import { AccountProvider, useAccount } from './sync/AccountProvider';
+import { pendingJoin } from './sync/useGroup';
+import { GroupsPage } from './pages/GroupsPage';
+import { GroupPage } from './pages/GroupPage';
+import { JoinPage } from './pages/JoinPage';
 import { useReminder } from './useReminder';
 import { TodayPage } from './pages/TodayPage';
 import { ListPage } from './pages/ListPage';
@@ -12,15 +18,28 @@ import { SupportPage } from './pages/SupportPage';
 import { PrintPage } from './pages/PrintPage';
 import { Icon, type IconName } from './components/Icon';
 
-const NAV: { to: string; label: string; icon: IconName }[] = [
+const NAV: { to: string; label: string; icon: IconName; needsAccount?: boolean }[] = [
   { to: '/', label: 'Today', icon: 'sun' },
   { to: '/prayers', label: 'Prayers', icon: 'list' },
+  { to: '/groups', label: 'Groups', icon: 'users', needsAccount: true },
   { to: '/answered', label: 'Answered', icon: 'star' },
   { to: '/settings', label: 'Settings', icon: 'gear' },
 ];
 
+/** Finishes joining a group after signing in through the email link. */
+function useResumeJoin() {
+  const { userId } = useAccount();
+  const navigate = useNavigate();
+  useEffect(() => {
+    const code = pendingJoin.get();
+    if (userId && code && !location.hash.startsWith('#/join/')) navigate(`/join/${code}`);
+  }, [userId, navigate]);
+}
+
 function Shell() {
   useReminder();
+  useResumeJoin();
+  const account = useAccount();
   return (
     <div className="shell">
       <a className="skip-link" href="#main">
@@ -32,7 +51,7 @@ function Shell() {
           <span>Prayer List</span>
         </NavLink>
         <nav className="nav" aria-label="Main">
-          {NAV.map((n) => (
+          {NAV.filter((n) => !n.needsAccount || account.enabled).map((n) => (
             <NavLink key={n.to} to={n.to} end={n.to === '/'} className="nav-link">
               <Icon name={n.icon} />
               <span>{n.label}</span>
@@ -51,6 +70,9 @@ function Shell() {
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="/support" element={<SupportPage />} />
           <Route path="/print" element={<PrintPage />} />
+          <Route path="/groups" element={<GroupsPage />} />
+          <Route path="/groups/:id" element={<GroupPage />} />
+          <Route path="/join/:code" element={<JoinPage />} />
           <Route path="*" element={<TodayPage />} />
         </Routes>
       </main>
@@ -61,9 +83,11 @@ function Shell() {
 export function App() {
   return (
     <StoreProvider>
-      <HashRouter>
-        <Shell />
-      </HashRouter>
+      <AccountProvider>
+        <HashRouter>
+          <Shell />
+        </HashRouter>
+      </AccountProvider>
     </StoreProvider>
   );
 }

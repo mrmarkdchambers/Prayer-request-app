@@ -3,6 +3,7 @@ import type { Schedule } from '../lib/types';
 import { TagInput } from './TagInput';
 import { ScheduleField } from './ScheduleField';
 import { PeopleList } from './PeopleList';
+import { useAccount } from '../sync/AccountProvider';
 
 export interface PrayerFormValues {
   title: string;
@@ -12,10 +13,13 @@ export interface PrayerFormValues {
   scripture: string;
   schedule: Schedule;
   followUpOn: string | null;
+  groupId: string | null;
 }
 
 export function PrayerForm({ initial, submitLabel, onSubmit, onCancel }: { initial: PrayerFormValues; submitLabel: string; onSubmit: (v: PrayerFormValues) => void; onCancel: () => void }) {
   const [v, setV] = useState(initial);
+  const { userId, groups } = useAccount();
+  const canShare = !!userId && !!groups && (groups.length > 0 || v.groupId !== null);
   const set = <K extends keyof PrayerFormValues>(k: K, val: PrayerFormValues[K]) => setV((prev) => ({ ...prev, [k]: val }));
 
   const submit = (e: FormEvent) => {
@@ -44,6 +48,20 @@ export function PrayerForm({ initial, submitLabel, onSubmit, onCancel }: { initi
         Scripture <span className="muted">(optional)</span>
         <input value={v.scripture} onChange={(e) => set('scripture', e.target.value)} placeholder="Philippians 4:6–7" />
       </label>
+      {canShare && (
+        <label className="field">
+          Who can see this
+          <select value={v.groupId ?? ''} onChange={(e) => set('groupId', e.target.value || null)}>
+            <option value="">Only me</option>
+            {groups!.map((g) => (
+              <option key={g.id} value={g.id}>
+                Me and {g.name}
+              </option>
+            ))}
+            {v.groupId && !groups!.some((g) => g.id === v.groupId) && <option value={v.groupId}>A group you've left</option>}
+          </select>
+        </label>
+      )}
       <ScheduleField value={v.schedule} onChange={(s) => set('schedule', s)} />
       <label className="field">
         Follow up on <span className="muted">(optional, e.g. check in after the appointment)</span>

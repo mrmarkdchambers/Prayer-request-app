@@ -1,5 +1,6 @@
 import type { AppData, Prayer, Settings } from './types';
 import { createPrayer, makeUpdate, type NewPrayerInput } from './prayers';
+import { applyRemote, attachAccount, detachAccount, markPushed, type RemotePrayer } from './sync';
 
 export type Action =
   | { type: 'add'; input: NewPrayerInput; now?: Date }
@@ -13,7 +14,11 @@ export type Action =
   | { type: 'addUpdate'; id: string; text: string; now?: Date }
   | { type: 'deleteUpdate'; id: string; updateId: string; now?: Date }
   | { type: 'settings'; patch: Partial<Settings> }
-  | { type: 'replace'; data: AppData };
+  | { type: 'replace'; data: AppData }
+  | { type: 'syncAttach'; userId: string }
+  | { type: 'syncDetach' }
+  | { type: 'syncApply'; rows: RemotePrayer[] }
+  | { type: 'syncPushed'; pushed: Prayer[]; deleted: string[] };
 
 function patchPrayer(data: AppData, id: string, now: Date, fn: (p: Prayer) => Prayer): AppData {
   return {
@@ -79,6 +84,15 @@ export function reducer(data: AppData, action: Action): AppData {
     case 'settings':
       return { ...data, settings: { ...data.settings, ...action.patch } };
     case 'replace':
-      return action.data;
+      // Keep the account link when restoring a backup, so restored prayers upload.
+      return data.sync && !action.data.sync ? { ...action.data, sync: data.sync } : action.data;
+    case 'syncAttach':
+      return attachAccount(data, action.userId).data;
+    case 'syncDetach':
+      return detachAccount(data);
+    case 'syncApply':
+      return applyRemote(data, action.rows);
+    case 'syncPushed':
+      return markPushed(data, action.pushed, action.deleted);
   }
 }

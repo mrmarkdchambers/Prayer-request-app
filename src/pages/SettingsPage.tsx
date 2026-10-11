@@ -7,6 +7,8 @@ import { dayKey } from '../lib/util';
 import { emptyData, type Theme } from '../lib/types';
 import { Dialog } from '../components/Dialog';
 import { Icon } from '../components/Icon';
+import { AccountCard } from '../components/AccountCard';
+import { useAccount } from '../sync/AccountProvider';
 
 export function SettingsPage() {
   const { data, dispatch, toast } = useStore();
@@ -14,6 +16,7 @@ export function SettingsPage() {
   const [clearOpen, setClearOpen] = useState(false);
   const [permission, setPermission] = useState(typeof Notification === 'undefined' ? 'unsupported' : Notification.permission);
   const s = data.settings;
+  const account = useAccount();
   const stamp = dayKey(new Date());
 
   const importFile = async (file: File) => {
@@ -33,6 +36,7 @@ export function SettingsPage() {
   return (
     <div className="stack narrow">
       <h1>Settings</h1>
+      <AccountCard />
 
       <section className="card stack-sm">
         <h2>Appearance</h2>
@@ -82,7 +86,9 @@ export function SettingsPage() {
       <section className="card stack-sm">
         <h2>Your data</h2>
         <p className="muted">
-          Your prayers are stored only in this browser. Export a backup now and then, especially before clearing browser data or switching devices.
+          {account.userId
+            ? 'Your prayers are saved to your account and kept on this device for offline use. You can also download your own copy at any time.'
+            : 'Your prayers are stored only in this browser. Export a backup now and then, especially before clearing browser data or switching devices.'}
         </p>
         <div className="row wrap">
           <button type="button" className="btn" onClick={() => download(`prayer-list-backup-${stamp}.json`, toJson(data), 'application/json')}>
@@ -110,9 +116,11 @@ export function SettingsPage() {
           />
         </div>
         <p className="muted">Import accepts a backup from this app, or a CSV from another app with a "title" column. Nothing is overwritten except older copies of the same prayers.</p>
-        <button type="button" className="btn btn-danger-ghost" onClick={() => setClearOpen(true)}>
-          <Icon name="trash" /> Delete all data
-        </button>
+        {!account.userId && (
+          <button type="button" className="btn btn-danger-ghost" onClick={() => setClearOpen(true)}>
+            <Icon name="trash" /> Delete all data
+          </button>
+        )}
       </section>
 
       <section className="card stack-sm">
@@ -126,8 +134,9 @@ export function SettingsPage() {
       <section className="card stack-sm">
         <h2>Privacy</h2>
         <p className="muted">
-          No account, no ads, no analytics. Your prayers never leave this device unless you export them. When sync and groups arrive, private
-          requests will stay private by default and will never be sold or shared.
+          No ads, no analytics, no tracking, and your data is never sold or shared. Without an account, your prayers never leave this device. With
+          one, they're stored securely so only you can see them. A request is shared only if you choose a group for it, and then only with that
+          group's members. Members see the name you choose, never your email.
         </p>
       </section>
 

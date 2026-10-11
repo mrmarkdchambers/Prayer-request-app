@@ -10,6 +10,7 @@ export interface NewPrayerInput {
   scripture?: string;
   schedule?: Schedule;
   followUpOn?: string | null;
+  groupId?: string | null;
 }
 
 export function createPrayer(input: NewPrayerInput, now = new Date()): Prayer {
@@ -31,6 +32,7 @@ export function createPrayer(input: NewPrayerInput, now = new Date()): Prayer {
     lastPrayedAt: null,
     followUpOn: input.followUpOn ?? null,
     updates: [],
+    groupId: input.groupId ?? null,
   };
 }
 

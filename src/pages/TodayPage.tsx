@@ -5,6 +5,25 @@ import { QuickAdd } from '../components/QuickAdd';
 import { PrayerCard } from '../components/PrayerCard';
 import { Icon } from '../components/Icon';
 import { computeStats } from '../lib/stats';
+import { useEffect, useState } from 'react';
+import { useAccount } from '../sync/AccountProvider';
+import { supabase } from '../sync/client';
+import * as api from '../sync/api';
+import { dayKey } from '../lib/util';
+
+/** People in your groups who prayed for your requests this past week. */
+function usePrayedForMe(userId: string | null, refreshKey: unknown) {
+  const [list, setList] = useState<api.PrayedForYou[]>([]);
+  useEffect(() => {
+    if (!supabase || !userId) {
+      setList([]);
+      return;
+    }
+    const since = dayKey(new Date(Date.now() - 6 * 86_400_000));
+    api.prayedForMe(supabase, userId, since).then(setList, () => {});
+  }, [userId, refreshKey]);
+  return list;
+}
 
 function greeting(now: Date): string {
   const h = now.getHours();
@@ -19,6 +38,8 @@ export function TodayPage() {
   const followUps = followUpsDue(data.prayers, now);
   const stats = computeStats(data.prayers, now);
   const isEmpty = data.prayers.length === 0;
+  const account = useAccount();
+  const prayedForMe = usePrayedForMe(account.userId, account.lastSynced);
 
   return (
     <div className="stack">
@@ -62,6 +83,21 @@ export function TodayPage() {
         <h2 className="section-title">Add a request</h2>
         <QuickAdd />
       </section>
+
+      {prayedForMe.length > 0 && (
+        <section className="card prayed-for-you" aria-labelledby="prayed-for-you">
+          <h2 id="prayed-for-you">
+            <Icon name="heart" /> You've been prayed for
+          </h2>
+          <ul className="list-plain stack-sm">
+            {prayedForMe.map((p) => (
+              <li key={p.prayerId}>
+                <strong>{p.people.join(', ')}</strong> prayed for <Link to={`/prayers/${p.prayerId}`}>{p.title}</Link> this week.
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       {followUps.length > 0 && (
         <section className="stack-sm">

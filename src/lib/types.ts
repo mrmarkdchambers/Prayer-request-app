@@ -39,6 +39,7 @@ export interface Prayer {
   lastPrayedAt: string | null;
   followUpOn: string | null; // YYYY-MM-DD
   updates: PrayerUpdate[];
+  groupId: string | null; // shared with this group; null = private
 }
 
 export type Theme = 'system' | 'light' | 'dark';
@@ -50,10 +51,20 @@ export interface Settings {
   supportPromptDismissed: boolean;
 }
 
+/** Bookkeeping for syncing with the signed-in account. Absent when signed out. */
+export interface SyncState {
+  userId: string;
+  /** Server timestamp of the newest change pulled so far. */
+  cursor: string | null;
+  /** Content hash of each prayer as last agreed with the server. */
+  hashes: Record<string, string>;
+}
+
 export interface AppData {
   version: 1;
   prayers: Prayer[];
   settings: Settings;
+  sync?: SyncState;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
