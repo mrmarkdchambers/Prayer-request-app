@@ -1,4 +1,4 @@
-# Prayer List
+# Intercede
 
 A free, private prayer request tracker. Add requests, pray through a few each day, post updates as things change, and keep a journal of answered prayers.
 
@@ -61,6 +61,24 @@ Put the local URL and anon key in `.env.local` as `VITE_SUPABASE_URL` and `VITE_
 4. In **Authentication → Email Templates**, edit both **Magic Link** and **Confirm signup** so they include the code. Copy the body from `supabase/templates/magic_link.html`, which uses `{{ .Token }}`. Without this step, emails contain only a link. The link doesn't open inside an installed app, so people need the code.
 5. Supabase's built-in email service only sends a few emails per hour. Before inviting real users, set up your own email sender under **Project Settings → Authentication → SMTP**. Resend, Postmark and Amazon SES all work, and most have a free tier.
 6. Copy the Project URL and the anon (publishable) key from **Project Settings → API** into `.env` (see `.env.example`), then rebuild.
+
+### Renaming the app
+
+The name lives in one place, `brand.json`:
+
+```json
+{
+  "name": "Intercede",
+  "shortName": "Intercede",
+  "tagline": "Pray for one another",
+  "description": "…",
+  "themeColor": "#4f46e5"
+}
+```
+
+Edit it and rebuild. The page title, home-screen name (`shortName`, keep it under about 12 characters), header, welcome text, support page, share messages and download file names all update. Sign-in emails don't mention the name, so they need no changes. Saved data isn't affected: the browser storage keys stay the same.
+
+The app icon is `public/icon.svg`. Replace that file to change it.
 
 ### Donation links
 

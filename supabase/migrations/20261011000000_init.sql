@@ -1,4 +1,4 @@
--- Prayer List: accounts, synced personal prayers, and small groups.
+-- Intercede: accounts, synced personal prayers, and small groups.
 --
 -- Privacy model
 --   * A prayer row is readable only by its owner. If the owner shares it with a

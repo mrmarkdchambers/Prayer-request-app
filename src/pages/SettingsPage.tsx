@@ -9,6 +9,7 @@ import { Dialog } from '../components/Dialog';
 import { Icon } from '../components/Icon';
 import { AccountCard } from '../components/AccountCard';
 import { useAccount } from '../sync/AccountProvider';
+import { APP_NAME, APP_SLUG } from '../config';
 
 export function SettingsPage() {
   const { data, dispatch, toast } = useStore();
@@ -67,7 +68,7 @@ export function SettingsPage() {
           <input type="time" value={s.reminderTime} onChange={(e) => e.target.value && dispatch({ type: 'settings', patch: { reminderTime: e.target.value } })} />
         </label>
         <div className="row wrap">
-          <button type="button" className="btn" onClick={() => download('prayer-reminder.ics', dailyReminderIcs(s.reminderTime, location.origin + location.pathname), 'text/calendar')}>
+          <button type="button" className="btn" onClick={() => download(`${APP_SLUG}-reminder.ics`, dailyReminderIcs(s.reminderTime, location.origin + location.pathname, APP_NAME), 'text/calendar')}>
             <Icon name="calendar" /> Add daily reminder to my calendar
           </button>
           {permission === 'default' && (
@@ -91,10 +92,10 @@ export function SettingsPage() {
             : 'Your prayers are stored only in this browser. Export a backup now and then, especially before clearing browser data or switching devices.'}
         </p>
         <div className="row wrap">
-          <button type="button" className="btn" onClick={() => download(`prayer-list-backup-${stamp}.json`, toJson(data), 'application/json')}>
+          <button type="button" className="btn" onClick={() => download(`${APP_SLUG}-backup-${stamp}.json`, toJson(data), 'application/json')}>
             Back up (JSON)
           </button>
-          <button type="button" className="btn" onClick={() => download(`prayer-list-${stamp}.csv`, toCsv(data.prayers), 'text/csv')}>
+          <button type="button" className="btn" onClick={() => download(`${APP_SLUG}-${stamp}.csv`, toCsv(data.prayers), 'text/csv')}>
             Export spreadsheet (CSV)
           </button>
           <Link to="/print" className="btn">
@@ -124,7 +125,7 @@ export function SettingsPage() {
       </section>
 
       <section className="card stack-sm">
-        <h2>Support Prayer List</h2>
+        <h2>Support {APP_NAME}</h2>
         <p>Every feature is free, with no ads and no tracking. If it helps you pray, you can chip in to keep it running.</p>
         <Link to="/support" className="btn">
           <Icon name="heart" /> Support

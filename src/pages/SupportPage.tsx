@@ -1,13 +1,13 @@
-import { donationLinks, hasDonationLinks } from '../config';
+import { APP_NAME, donationLinks, hasDonationLinks } from '../config';
 import { Icon } from '../components/Icon';
 
 export function SupportPage() {
   return (
     <div className="stack narrow">
-      <h1>Support Prayer List</h1>
+      <h1>Support {APP_NAME}</h1>
       <p>
-        Prayer List is free for everyone: no ads, no premium tier, no selling your data. Every feature, including groups and sync when they arrive,
-        stays free.
+        {APP_NAME} is free for everyone: no ads, no premium tier, no selling your data. Every feature, including groups and sync, stays
+        free.
       </p>
       <p>If it's helped you pray, a gift helps cover hosting and keeps it growing. Thank you!</p>
       {hasDonationLinks ? (

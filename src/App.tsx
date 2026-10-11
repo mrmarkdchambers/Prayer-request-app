@@ -17,6 +17,7 @@ import { SettingsPage } from './pages/SettingsPage';
 import { SupportPage } from './pages/SupportPage';
 import { PrintPage } from './pages/PrintPage';
 import { Icon, type IconName } from './components/Icon';
+import { APP_NAME } from './config';
 
 const NAV: { to: string; label: string; icon: IconName; needsAccount?: boolean }[] = [
   { to: '/', label: 'Today', icon: 'sun' },
@@ -48,7 +49,7 @@ function Shell() {
       <header className="topbar">
         <NavLink to="/" className="brand">
           <img src="/icon.svg" alt="" width={28} height={28} />
-          <span>Prayer List</span>
+          <span>{APP_NAME}</span>
         </NavLink>
         <nav className="nav" aria-label="Main">
           {NAV.filter((n) => !n.needsAccount || account.enabled).map((n) => (

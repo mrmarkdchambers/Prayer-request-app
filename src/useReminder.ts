@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useStore } from './store';
 import { buildSession } from './lib/session';
 import { dayKey } from './lib/util';
+import { APP_NAME } from './config';
 
 const KEY = 'prayer-list:last-reminder';
 
@@ -32,7 +33,7 @@ export function useReminder() {
       } catch {
         /* storage blocked */
       }
-      new Notification('Time to pray', { body: `${waiting} prayer${waiting === 1 ? '' : 's'} ready for today.`, icon: '/icon.svg' });
+      new Notification(`Time to pray · ${APP_NAME}`, { body: `${waiting} prayer${waiting === 1 ? '' : 's'} ready for today.`, icon: '/icon.svg' });
     };
     check();
     const id = window.setInterval(check, 60_000);

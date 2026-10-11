@@ -298,3 +298,4 @@ span.chip { cursor: default; }
 .prayed-for-you h2 { display: flex; align-items: center; gap: 8px; }
 .prayed-for-you .icon { color: var(--danger); }
 .name-prompt { background: var(--primary-soft); border-color: transparent; }
+.tagline { font-family: var(--serif); font-style: italic; color: var(--muted); }

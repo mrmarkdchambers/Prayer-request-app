@@ -10,6 +10,7 @@ import { useAccount } from '../sync/AccountProvider';
 import { supabase } from '../sync/client';
 import * as api from '../sync/api';
 import { dayKey } from '../lib/util';
+import { APP_NAME, APP_TAGLINE } from '../config';
 
 /** People in your groups who prayed for your requests this past week. */
 function usePrayedForMe(userId: string | null, refreshKey: unknown) {
@@ -47,10 +48,10 @@ export function TodayPage() {
 
       {isEmpty ? (
         <section className="card welcome">
-          <h2>Welcome</h2>
+          <h2>Welcome to {APP_NAME}</h2>
+          <p className="tagline">{APP_TAGLINE}.</p>
           <p>
-            Keep track of what you're praying for, pray through a few requests each day, and look back on answered prayers. Everything stays private
-            on this device.
+            Keep track of what you're praying for, pray through a few requests each day, and look back on answered prayers. It's free and private.
           </p>
           <p>Add your first request below, or paste a whole list with "Add many at once".</p>
         </section>

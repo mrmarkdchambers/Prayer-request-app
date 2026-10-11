@@ -237,11 +237,11 @@ otp_expiry = 3600
 # Sign-in emails include both a link and a 6-digit code. The code matters for
 # the installed app, where tapping a link opens the browser instead of the app.
 [auth.email.template.magic_link]
-subject = "Your Prayer List sign-in code"
+subject = "Your sign-in code"
 content_path = "./supabase/templates/magic_link.html"
 
 [auth.email.template.confirmation]
-subject = "Your Prayer List sign-in code"
+subject = "Your sign-in code"
 content_path = "./supabase/templates/magic_link.html"
 
 # Use a production-ready SMTP server

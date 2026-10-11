@@ -9,6 +9,7 @@ import { dayKey, formatRelative } from '../lib/util';
 import { Dialog } from '../components/Dialog';
 import { QrCode } from '../components/QrCode';
 import { Icon } from '../components/Icon';
+import { APP_NAME } from '../config';
 import { NamePrompt } from '../components/NamePrompt';
 
 function SharedPrayerCard({ prayer, me, onPray }: { prayer: api.SharedPrayer; me: string; onPray: () => void }) {
@@ -118,7 +119,7 @@ export function GroupPage() {
 
   const share = async () => {
     try {
-      await navigator.share({ title: `Join ${group.name}`, text: `Join our prayer group "${group.name}" on Prayer List`, url: link });
+      await navigator.share({ title: `Join ${group.name}`, text: `Join our prayer group "${group.name}" on ${APP_NAME}`, url: link });
     } catch {
       /* cancelled */
     }

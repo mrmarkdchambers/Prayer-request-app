@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { useStore } from '../store';
 import { answeredByMonth, computeStats } from '../lib/stats';
 import { formatDate, waitedLabel } from '../lib/util';
-import { hasDonationLinks } from '../config';
+import { APP_NAME, hasDonationLinks } from '../config';
 
 export function AnsweredPage() {
   const { data, dispatch } = useStore();
@@ -32,7 +32,7 @@ export function AnsweredPage() {
       {showSupport && (
         <aside className="card support-nudge">
           <p>
-            Glad this helps you remember what God has done. Prayer List is free with no ads. If you'd like to help keep it that way,{' '}
+            Glad this helps you remember what God has done. {APP_NAME} is free with no ads. If you'd like to help keep it that way,{' '}
             <Link to="/support">you can support it</Link>.
           </p>
           <button type="button" className="link muted" onClick={() => dispatch({ type: 'settings', patch: { supportPromptDismissed: true } })}>

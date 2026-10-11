@@ -166,8 +166,9 @@ describe('export / import', () => {
   });
 
   it('builds a daily calendar reminder', () => {
-    const ics = dailyReminderIcs('07:30', 'https://example.com', day('2026-10-11'));
+    const ics = dailyReminderIcs('07:30', 'https://example.com', 'Intercede', day('2026-10-11'));
     expect(ics).toContain('DTSTART:20261011T073000');
     expect(ics).toContain('RRULE:FREQ=DAILY');
+    expect(ics).toContain('DESCRIPTION:Open Intercede: https://example.com');
   });
 });

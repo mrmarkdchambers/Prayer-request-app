@@ -24,7 +24,7 @@ export function PrintPage() {
           Back
         </Link>
       </div>
-      <h1>Prayer List</h1>
+      <h1>My prayer list</h1>
       <p className="muted">{formatDate(new Date().toISOString())} · {active.length} active requests</p>
       {sorted.map(([tag, prayers]) => (
         <section key={tag}>

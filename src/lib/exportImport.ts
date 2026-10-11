@@ -212,14 +212,14 @@ export function prayersFromCsv(text: string): Prayer[] {
 // ---------- Calendar reminder ----------
 
 /** A daily recurring calendar event, so reminders work even when the app is closed. */
-export function dailyReminderIcs(time: string, appUrl: string, now = new Date()): string {
+export function dailyReminderIcs(time: string, appUrl: string, appName = 'Prayer app', now = new Date()): string {
   const [hh, mm] = time.split(':');
   const ymd = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`;
   const stamp = now.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
   return [
     'BEGIN:VCALENDAR',
     'VERSION:2.0',
-    'PRODID:-//Prayer List//EN',
+    `PRODID:-//${appName}//EN`,
     'BEGIN:VEVENT',
     `UID:prayer-reminder-${ymd}@prayer-list`,
     `DTSTAMP:${stamp}`,
@@ -227,7 +227,7 @@ export function dailyReminderIcs(time: string, appUrl: string, now = new Date())
     'DURATION:PT15M',
     'RRULE:FREQ=DAILY',
     'SUMMARY:Time to pray',
-    `DESCRIPTION:Open your prayer list: ${appUrl}`,
+    `DESCRIPTION:Open ${appName}: ${appUrl}`,
     `URL:${appUrl}`,
     'BEGIN:VALARM',
     'ACTION:DISPLAY',
