@@ -93,7 +93,9 @@ With no links set, the Support page says donations aren't set up yet, and the oc
 
 ### Deploying
 
-`npm run build` produces a static site in `dist/`. It can be hosted anywhere static, such as Netlify, Vercel, Cloudflare Pages, or GitHub Pages. The app uses hash routing, so no rewrite rules are needed.
+The app is set up for **Netlify** (`netlify.toml`): every push to `main` builds and publishes it. Add `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` (and optionally the donation links) under **Site configuration → Environment variables**, then redeploy.
+
+Any static host works. `npm run build` produces a static site in `dist/`, and the app uses hash routing, so no rewrite rules are needed.
 
 ## Project layout
 

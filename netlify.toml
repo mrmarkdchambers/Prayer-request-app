@@ -1,0 +1,32 @@
+# Netlify picks these up automatically; no settings needed in the dashboard.
+# Supabase settings (VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY) and donation links
+# go in Netlify under Site configuration → Environment variables.
+
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+# The app uses #/ routes, so no redirect rules are needed.
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    X-Frame-Options = "DENY"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=()"
+
+# Built files have content hashes in their names, so they can be cached forever.
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# The service worker must always be fresh so updates reach people.
+[[headers]]
+  for = "/sw.js"
+  [headers.values]
+    Cache-Control = "no-cache"
