@@ -3,7 +3,12 @@
 # Site configuration → Environment variables.
 
 [build]
-  command = "npm run build"
+  # The app lives at the repository root. This overrides the "Base directory"
+  # set in the Netlify UI, which points to a "main" folder that does not exist.
+  base = "/"
+  # Install dependencies here too, because the automatic install step can be
+  # skipped when the dashboard base directory is wrong.
+  command = "npm ci --include=dev && npm run build"
   publish = "dist"
 
 [build.environment]
