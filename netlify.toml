@@ -1,6 +1,6 @@
 # Netlify picks these up automatically; no settings needed in the dashboard.
-# Supabase settings (VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY) and donation links
-# go in Netlify under Site configuration → Environment variables.
+# Set VITE_SUPABASE_ANON_KEY (and optionally the donation links) in Netlify under
+# Site configuration → Environment variables.
 
 [build]
   # The app lives at the repository root. This overrides the "Base directory"
@@ -13,6 +13,8 @@
 
 [build.environment]
   NODE_VERSION = "22"
+  # The project's public address (not a secret; every visitor's browser uses it).
+  VITE_SUPABASE_URL = "https://vsvkvfwufcnyndtsfibg.supabase.co"
 
 # The app uses #/ routes, so no redirect rules are needed.
 

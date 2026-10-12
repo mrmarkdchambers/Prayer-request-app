@@ -93,7 +93,7 @@ With no links set, the Support page says donations aren't set up yet, and the oc
 
 ### Deploying
 
-The app is set up for **Netlify** (`netlify.toml`): every push to `main` builds and publishes it. Add `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` (and optionally the donation links) under **Site configuration → Environment variables**, then redeploy.
+The app is set up for **Netlify** (`netlify.toml`): every push to `main` builds and publishes it. The Supabase project URL is set in `netlify.toml`. Add `VITE_SUPABASE_ANON_KEY` (and optionally the donation links) under **Site configuration → Environment variables**, then redeploy.
 
 Any static host works. `npm run build` produces a static site in `dist/`, and the app uses hash routing, so no rewrite rules are needed.
 
