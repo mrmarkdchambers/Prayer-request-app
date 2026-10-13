@@ -54,7 +54,7 @@ export function SignInForm({ intro }: { intro?: string }) {
       ) : (
         <form className="stack-sm" onSubmit={submitCode}>
           <p>
-            We sent a 6-digit code to <strong>{email}</strong>.
+            Check <strong>{email}</strong>. Enter the 6-digit code from the email, or tap its sign-in link on this device.
           </p>
           <label className="field">
             Code
