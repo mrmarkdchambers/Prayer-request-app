@@ -3,6 +3,7 @@ import { useAccount } from '../sync/AccountProvider';
 import { useStore } from '../store';
 import { SignInForm } from './SignInForm';
 import { Dialog } from './Dialog';
+import { missingBackendSettings } from '../sync/client';
 
 function statusText(status: string, lastSynced: Date | null): string {
   switch (status) {
@@ -30,7 +31,19 @@ export function AccountCard() {
     if (!editingName) setName(account.displayName ?? '');
   }, [account.displayName, editingName]);
 
-  if (!account.enabled) return null;
+  if (!account.enabled) {
+    // Half-configured: tell whoever is setting it up what's missing, rather than silently hiding accounts.
+    if (missingBackendSettings.length === 0) return null;
+    return (
+      <section className="card stack-sm">
+        <h2>Account</h2>
+        <p>Accounts aren't switched on yet. This version of the site was built without {missingBackendSettings.join(' and ')}.</p>
+        <p className="muted">
+          Add it in Netlify under Project configuration → Environment variables (with the Builds scope), then redeploy with Deploys → Trigger deploy.
+        </p>
+      </section>
+    );
+  }
 
   if (!account.userId) {
     return (
