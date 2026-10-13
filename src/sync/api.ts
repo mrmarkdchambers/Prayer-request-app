@@ -229,3 +229,77 @@ export async function prayedForMe(sb: SupabaseClient, userId: string, sinceDay: 
   }
   return [...byPrayer.values()];
 }
+
+// ---------------------------------------------------------------- notifications
+
+export interface NotificationSettings {
+  prayedForMe: boolean;
+  groupActivity: boolean;
+  dailyReminder: boolean;
+  reminderTime: string; // HH:MM
+  timezone: string;
+}
+
+export const DEFAULT_NOTIFICATION_SETTINGS: NotificationSettings = {
+  prayedForMe: true,
+  groupActivity: true,
+  dailyReminder: false,
+  reminderTime: '07:30',
+  timezone: 'UTC',
+};
+
+export async function getNotificationSettings(sb: SupabaseClient, userId: string): Promise<NotificationSettings | null> {
+  const row = check(
+    await sb.from('notification_settings').select('prayed_for_me, group_activity, daily_reminder, reminder_time, timezone').eq('user_id', userId).maybeSingle(),
+  ) as { prayed_for_me: boolean; group_activity: boolean; daily_reminder: boolean; reminder_time: string; timezone: string } | null;
+  if (!row) return null;
+  return {
+    prayedForMe: row.prayed_for_me,
+    groupActivity: row.group_activity,
+    dailyReminder: row.daily_reminder,
+    reminderTime: row.reminder_time.slice(0, 5),
+    timezone: row.timezone,
+  };
+}
+
+export async function saveNotificationSettings(sb: SupabaseClient, userId: string, s: NotificationSettings): Promise<void> {
+  check(
+    await sb.from('notification_settings').upsert({
+      user_id: userId,
+      prayed_for_me: s.prayedForMe,
+      group_activity: s.groupActivity,
+      daily_reminder: s.dailyReminder,
+      reminder_time: s.reminderTime,
+      timezone: s.timezone,
+    }),
+  );
+}
+
+export type PushKind = 'web' | 'fcm' | 'apns';
+
+/** Links this device to the signed-in account (taking it over from anyone who used it before). */
+export async function registerPush(sb: SupabaseClient, kind: PushKind, endpoint: string, keys?: { p256dh: string; auth: string }): Promise<void> {
+  check(await sb.rpc('register_push', { kind, endpoint, p256dh: keys?.p256dh ?? null, auth_secret: keys?.auth ?? null }));
+}
+
+export async function unregisterPush(sb: SupabaseClient, endpoint: string): Promise<void> {
+  check(await sb.from('push_subscriptions').delete().eq('endpoint', endpoint));
+}
+
+export async function deviceCount(sb: SupabaseClient): Promise<number> {
+  const { count, error } = await sb.from('push_subscriptions').select('id', { count: 'exact', head: true });
+  if (error) throw new Error(error.message);
+  return count ?? 0;
+}
+
+/** The server's public key for web push subscriptions. */
+export async function vapidPublicKey(sb: SupabaseClient): Promise<string> {
+  const { data, error } = await sb.functions.invoke('notify', { body: { action: 'vapid' } });
+  if (error || !data?.publicKey) throw new Error('Notifications are not available right now');
+  return data.publicKey as string;
+}
+
+/** Permanently deletes the account and everything in it. Groups you lead pass to another member. */
+export async function deleteAccount(sb: SupabaseClient): Promise<void> {
+  check(await sb.rpc('delete_account'));
+}

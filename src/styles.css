@@ -299,3 +299,16 @@ span.chip { cursor: default; }
 .prayed-for-you .icon { color: var(--danger); }
 .name-prompt { background: var(--primary-soft); border-color: transparent; }
 .tagline { font-family: var(--serif); font-style: italic; color: var(--muted); }
+.prefs { display: flex; flex-direction: column; gap: 10px; }
+.check { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-weight: 400; }
+.check input[type='checkbox'] { width: 22px; height: 22px; min-height: 0; accent-color: var(--primary); }
+.check input[type='time'] { width: auto; min-height: 36px; padding: 4px 8px; }
+.danger-link { color: var(--danger); }
+.prose h2 { margin-top: 8px; }
+.prose ul { margin: 0; padding-left: 22px; display: flex; flex-direction: column; gap: 6px; }
+
+/* Store apps draw under the status bar and home indicator. */
+.topbar { padding-top: max(10px, env(safe-area-inset-top)); }
+@media (max-width: 640px) {
+  .topbar { padding-top: max(10px, env(safe-area-inset-top)); }
+}

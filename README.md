@@ -26,6 +26,12 @@ See [docs/RESEARCH.md](docs/RESEARCH.md) for the market research and feature pla
 - **Small groups**: create a group, invite people with a link or QR code, and choose for each request whether only you see it or a group does too. Members tap "I prayed" (once a day per request), and the person who asked sees "You've been prayed for" on Today. Group leaders can rename the group, remove members, reset the invite link, or delete the group.
 - **Privacy**: enforced in the database (row-level security), not just the app. Only you can read your prayer rows. Group members see a shared request's title, details, updates and answer, never your follow-up dates, schedules or prayer counts. Members see your chosen display name, never your email. Leaving or deleting a group makes your shared requests private again. Signed-out visitors can read nothing.
 
+### Notifications and the apps
+
+- **Notifications:** "someone prayed for you", new and answered requests in your groups, and a daily reminder at your local time. They work in browsers and the installed web app (web push, end-to-end encrypted) and in the iPhone/Android apps (Apple/Google push). Each type can be turned off, and each device turned on or off.
+- **iPhone and Android apps:** the same app, packaged with Capacitor (`ios/`, `android/`). The **Apps** workflow builds both on every push to `main`, and its Android run has an installable test APK under Artifacts. See [docs/APP_STORES.md](docs/APP_STORES.md) for publishing, including the one-time Supabase cron job that sends notifications.
+- **Account deletion** in Settings, as both stores require, and a privacy policy at `/#/privacy`.
+
 Without Supabase settings, the app runs entirely in the browser (`localStorage`), and Groups and account features are hidden.
 
 ## Development
@@ -93,7 +99,7 @@ With no links set, the Support page says donations aren't set up yet, and the oc
 
 ### Deploying
 
-The app is set up for **Netlify** (`netlify.toml`): every push to `main` builds and publishes it. The Supabase project URL and publishable key are set in `netlify.toml`; both are public by design. Optional donation links go under **Project configuration → Environment variables**.
+The app is set up for **Netlify** (`netlify.toml`): every push to `main` builds and publishes it. The Supabase project URL and publishable key are in `.env.production` (public by design), shared by the website and app builds. Optional donation links go under **Project configuration → Environment variables**.
 
 Any static host works. `npm run build` produces a static site in `dist/`, and the app uses hash routing, so no rewrite rules are needed.
 
@@ -105,7 +111,9 @@ src/lib/        Pure logic: types, reducer, session rotation, tags, bulk parsing
 src/lib/sync.ts Pure sync rules: what to upload, how to merge pulled changes
 src/sync/       Supabase client, row mapping, API calls, account and sync provider.
                 integration.test.ts checks the backend against a real database
-supabase/       Database schema and row-level security (migrations/), local config
+supabase/       Database schema and row-level security (migrations/), the notify edge
+                function (functions/notify), local config
+ios/, android/  Native app projects (Capacitor). assets/ holds the icon and splash sources
 src/pages/      Today, Prayers, Prayer detail, Session, Answered, Settings, Support, Print
 src/components/ Shared UI
 public/sw.js    Offline service worker
@@ -114,6 +122,6 @@ public/sw.js    Offline service worker
 ## Roadmap
 
 - Done: accounts, sync, small groups, the "I prayed" counter, and the "you've been prayed for" view.
-- Next: push notifications (reminders and "someone prayed for you" while the app is closed) and a weekly email summary for each group. Both need a small server function.
+- Done: notifications (web and native push), iPhone and Android app projects, account deletion.
+- Next: store submission (see docs/APP_STORES.md), a reviewer sign-in, a signed Android release build in CI, and a weekly email summary for each group.
 - Later: voice entry, home-screen widgets, subscribing to church or ministry prayer feeds, a moderated public prayer wall.
-- Then: app store packaging with Capacitor.

@@ -26,6 +26,10 @@ export function AccountCard() {
   const [name, setName] = useState(account.displayName ?? '');
   const [editingName, setEditingName] = useState(false);
   const [warnOpen, setWarnOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [confirmText, setConfirmText] = useState('');
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   // Show the saved name once it loads, but never overwrite what someone is typing.
   useEffect(() => {
     if (!editingName) setName(account.displayName ?? '');
@@ -103,6 +107,49 @@ export function AccountCard() {
         Sign out
       </button>
       <p className="muted">Signing out removes your prayers from this device. They stay safe in your account.</p>
+      <button type="button" className="link danger-link align-start" onClick={() => setDeleteOpen(true)}>
+        Delete my account
+      </button>
+      <Dialog open={deleteOpen} onClose={() => setDeleteOpen(false)} title="Delete your account?">
+        <p>
+          This permanently deletes your account, all your prayers and updates, and your devices' notification settings, from every device. It
+          can't be undone.
+        </p>
+        <p>Groups you lead pass to the longest-standing member; groups with no one else in them are deleted. Download a backup first if you want to keep your prayers.</p>
+        <label className="field">
+          Type DELETE to confirm
+          <input value={confirmText} onChange={(e) => setConfirmText(e.target.value)} autoComplete="off" />
+        </label>
+        {deleteError && (
+          <p className="error" role="alert">
+            {deleteError}
+          </p>
+        )}
+        <div className="row">
+          <button
+            type="button"
+            className="btn btn-danger"
+            disabled={confirmText.trim().toUpperCase() !== 'DELETE' || deleting}
+            onClick={async () => {
+              setDeleting(true);
+              setDeleteError(null);
+              try {
+                await account.deleteAccount();
+                setDeleteOpen(false);
+              } catch {
+                setDeleteError("Couldn't delete your account. Check your connection and try again.");
+              } finally {
+                setDeleting(false);
+              }
+            }}
+          >
+            {deleting ? 'Deleting…' : 'Delete everything'}
+          </button>
+          <button type="button" className="btn" onClick={() => setDeleteOpen(false)}>
+            Cancel
+          </button>
+        </div>
+      </Dialog>
       <Dialog open={warnOpen} onClose={() => setWarnOpen(false)} title="Some changes haven't uploaded">
         <p>You're offline or the server can't be reached, so your latest changes are only on this device. Signing out now would lose them.</p>
         <div className="row">

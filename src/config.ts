@@ -1,4 +1,5 @@
 import brand from '../brand.json';
+import { isNativeApp } from './platform';
 
 /** The app's name: change it in brand.json at the project root. */
 export const APP_NAME = brand.name;
@@ -11,4 +12,10 @@ export const donationLinks = {
   stripe: (import.meta.env.VITE_STRIPE_URL as string | undefined)?.trim() || '',
 };
 
-export const hasDonationLinks = Boolean(donationLinks.kofi || donationLinks.stripe);
+/**
+ * Apple and Google only allow links to outside payments from registered
+ * charities, so the store apps never show donation links; the website does.
+ */
+export const hasDonationLinks = !isNativeApp && Boolean(donationLinks.kofi || donationLinks.stripe);
+
+export const CONTACT_EMAIL = brand.contactEmail;

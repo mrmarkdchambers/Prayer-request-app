@@ -6,6 +6,8 @@ import { pendingJoin } from './sync/useGroup';
 import { GroupsPage } from './pages/GroupsPage';
 import { GroupPage } from './pages/GroupPage';
 import { JoinPage } from './pages/JoinPage';
+import { PrivacyPage } from './pages/PrivacyPage';
+import { listenForNotificationTaps } from './sync/push';
 import { useReminder } from './useReminder';
 import { TodayPage } from './pages/TodayPage';
 import { ListPage } from './pages/ListPage';
@@ -37,9 +39,16 @@ function useResumeJoin() {
   }, [userId, navigate]);
 }
 
+/** In the store apps, tapping a notification opens the screen it's about. */
+function useNotificationTaps() {
+  const navigate = useNavigate();
+  useEffect(() => listenForNotificationTaps(navigate), [navigate]);
+}
+
 function Shell() {
   useReminder();
   useResumeJoin();
+  useNotificationTaps();
   const account = useAccount();
   return (
     <div className="shell">
@@ -74,6 +83,7 @@ function Shell() {
           <Route path="/groups" element={<GroupsPage />} />
           <Route path="/groups/:id" element={<GroupPage />} />
           <Route path="/join/:code" element={<JoinPage />} />
+          <Route path="/privacy" element={<PrivacyPage />} />
           <Route path="*" element={<TodayPage />} />
         </Routes>
       </main>

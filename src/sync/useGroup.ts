@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { supabase } from './client';
 import * as api from './api';
+import { publicUrl } from '../platform';
 
 /** Loads a group's shared requests and keeps them fresh while the page is open. */
 /** `refreshKey` changing (e.g. after a sync uploads your edits) triggers a reload. */
@@ -36,7 +37,7 @@ export function useGroupPrayers(groupId: string | undefined, enabled: boolean, r
 }
 
 export function inviteLink(code: string): string {
-  return `${location.origin}${location.pathname}#/join/${code}`;
+  return `${publicUrl}#/join/${code}`;
 }
 
 const PENDING_JOIN = 'prayer-list:pending-join';

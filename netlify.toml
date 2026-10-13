@@ -8,11 +8,7 @@
 
 [build.environment]
   NODE_VERSION = "22"
-  # Public by design: every visitor's browser receives these, and the database's
-  # row-level security decides what each person can see. Never put the secret /
-  # service_role key here.
-  VITE_SUPABASE_URL = "https://vsvkvfwufcnyndtsfibg.supabase.co"
-  VITE_SUPABASE_ANON_KEY = "sb_publishable_U3qig2XIyLU7qpJq4AXhGQ__YMlLhkT"
+  # The Supabase settings come from .env.production, shared with the app builds.
 
 # The app uses #/ routes, so no redirect rules are needed.
 

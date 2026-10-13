@@ -3,6 +3,7 @@ import { useStore } from './store';
 import { buildSession } from './lib/session';
 import { dayKey } from './lib/util';
 import { APP_NAME } from './config';
+import { useAccount } from './sync/AccountProvider';
 
 const KEY = 'prayer-list:last-reminder';
 
@@ -13,7 +14,9 @@ const KEY = 'prayer-list:last-reminder';
  */
 export function useReminder() {
   const { data } = useStore();
+  const { userId } = useAccount();
   useEffect(() => {
+    if (userId) return;
     const check = () => {
       if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return;
       const now = new Date();
@@ -38,5 +41,5 @@ export function useReminder() {
     check();
     const id = window.setInterval(check, 60_000);
     return () => window.clearInterval(id);
-  }, [data.prayers, data.settings.reminderTime, data.settings.sessionSize]);
+  }, [data.prayers, data.settings.reminderTime, data.settings.sessionSize, userId]);
 }

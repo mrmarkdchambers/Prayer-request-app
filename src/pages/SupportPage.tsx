@@ -1,7 +1,17 @@
 import { APP_NAME, donationLinks, hasDonationLinks } from '../config';
 import { Icon } from '../components/Icon';
+import { isNativeApp } from '../platform';
 
 export function SupportPage() {
+  // Store rules don't allow donation links in the apps.
+  if (isNativeApp) {
+    return (
+      <div className="stack narrow">
+        <h1>Thank you</h1>
+        <p>{APP_NAME} is free for everyone, with no ads and no premium tier. Thank you for praying with us.</p>
+      </div>
+    );
+  }
   return (
     <div className="stack narrow">
       <h1>Support {APP_NAME}</h1>

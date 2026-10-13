@@ -8,8 +8,10 @@ import { emptyData, type Theme } from '../lib/types';
 import { Dialog } from '../components/Dialog';
 import { Icon } from '../components/Icon';
 import { AccountCard } from '../components/AccountCard';
+import { NotificationsCard } from '../components/NotificationsCard';
 import { useAccount } from '../sync/AccountProvider';
 import { APP_NAME, APP_SLUG } from '../config';
+import { isNativeApp, publicUrl } from '../platform';
 
 export function SettingsPage() {
   const { data, dispatch, toast } = useStore();
@@ -38,6 +40,7 @@ export function SettingsPage() {
     <div className="stack narrow">
       <h1>Settings</h1>
       <AccountCard />
+      <NotificationsCard />
 
       <section className="card stack-sm">
         <h2>Appearance</h2>
@@ -63,24 +66,28 @@ export function SettingsPage() {
           />
         </label>
         <p className="muted">Prayers set to a fixed day are always included; the rest rotate so everything gets prayed for.</p>
-        <label className="inline">
-          Reminder time
-          <input type="time" value={s.reminderTime} onChange={(e) => e.target.value && dispatch({ type: 'settings', patch: { reminderTime: e.target.value } })} />
-        </label>
+        {!account.userId && (
+          <label className="inline">
+            Reminder time
+            <input type="time" value={s.reminderTime} onChange={(e) => e.target.value && dispatch({ type: 'settings', patch: { reminderTime: e.target.value } })} />
+          </label>
+        )}
         <div className="row wrap">
-          <button type="button" className="btn" onClick={() => download(`${APP_SLUG}-reminder.ics`, dailyReminderIcs(s.reminderTime, location.origin + location.pathname, APP_NAME), 'text/calendar')}>
+          <button type="button" className="btn" onClick={() => download(`${APP_SLUG}-reminder.ics`, dailyReminderIcs(s.reminderTime, publicUrl, APP_NAME), 'text/calendar')}>
             <Icon name="calendar" /> Add daily reminder to my calendar
           </button>
-          {permission === 'default' && (
+          {permission === 'default' && !account.userId && (
             <button type="button" className="btn" onClick={async () => setPermission(await Notification.requestPermission())}>
               Allow notifications
             </button>
           )}
         </div>
         <p className="muted">
-          The calendar reminder works even when this app is closed.
-          {permission === 'granted' && ' Notifications are on while the app is open.'}
-          {permission === 'denied' && ' Notifications are blocked in your browser settings.'}
+          {account.userId
+            ? 'Set your daily reminder under Notifications above, or add one to your calendar.'
+            : 'The calendar reminder works even when this app is closed. Sign in to get reminders as notifications on your phone.'}
+          {!account.userId && permission === 'granted' && ' Notifications are on while the app is open.'}
+          {!account.userId && permission === 'denied' && ' Notifications are blocked in your browser settings.'}
         </p>
       </section>
 
@@ -124,13 +131,15 @@ export function SettingsPage() {
         )}
       </section>
 
+      {!isNativeApp && (
       <section className="card stack-sm">
         <h2>Support {APP_NAME}</h2>
         <p>Every feature is free, with no ads and no tracking. If it helps you pray, you can chip in to keep it running.</p>
-        <Link to="/support" className="btn">
+        <Link to="/support" className="btn align-start">
           <Icon name="heart" /> Support
         </Link>
       </section>
+      )}
 
       <section className="card stack-sm">
         <h2>Privacy</h2>
@@ -139,6 +148,7 @@ export function SettingsPage() {
           one, they're stored securely so only you can see them. A request is shared only if you choose a group for it, and then only with that
           group's members. Members see the name you choose, never your email.
         </p>
+        <Link to="/privacy">Read the full privacy policy</Link>
       </section>
 
       <Dialog open={clearOpen} onClose={() => setClearOpen(false)} title="Delete all data?">

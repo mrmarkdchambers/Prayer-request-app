@@ -3,5 +3,8 @@
   "shortName": "Intercede",
   "tagline": "Pray for one another",
   "description": "A free, private prayer list: track requests, pray daily, pray with your small group, and remember answered prayers.",
-  "themeColor": "#4f46e5"
+  "themeColor": "#4f46e5",
+  "appId": "com.intercede.prayer",
+  "webUrl": "https://prayerrequestapp.netlify.app",
+  "contactEmail": ""
 }

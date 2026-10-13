@@ -4,6 +4,8 @@ import { supabase } from './client';
 import * as api from './api';
 import { useStore } from '../store';
 import { applyRemote, pendingPush } from '../lib/sync';
+import { publicUrl } from '../platform';
+import { disablePush } from './push';
 
 export type SyncStatus = 'idle' | 'syncing' | 'synced' | 'offline' | 'error';
 
@@ -23,6 +25,8 @@ interface Account {
   verifyCode: (email: string, code: string) => Promise<void>;
   /** Returns false (and stays signed in) if changes haven't uploaded, unless forced. */
   signOut: (force?: boolean) => Promise<boolean>;
+  /** Permanently deletes the account and everything in it, then signs out. */
+  deleteAccount: () => Promise<void>;
   groups: api.Group[] | null;
   refreshGroups: () => Promise<void>;
 }
@@ -164,7 +168,7 @@ export function AccountProvider({ children }: { children: ReactNode }) {
         if (!sb) return;
         const { error } = await sb.auth.signInWithOtp({
           email: email.trim(),
-          options: { emailRedirectTo: location.origin + location.pathname, shouldCreateUser: true },
+          options: { emailRedirectTo: publicUrl, shouldCreateUser: true },
         });
         if (error) throw error;
       },
@@ -178,9 +182,17 @@ export function AccountProvider({ children }: { children: ReactNode }) {
         await syncNow();
         const left = pendingPush(dataRef.current);
         if (!force && left.upserts.length + left.deletes.length > 0) return false;
+        await disablePush(sb);
         await sb.auth.signOut();
         dispatch({ type: 'syncDetach' });
         return true;
+      },
+      deleteAccount: async () => {
+        if (!sb) return;
+        await api.deleteAccount(sb);
+        await disablePush(null);
+        await sb.auth.signOut({ scope: 'local' });
+        dispatch({ type: 'syncDetach' });
       },
       groups,
       refreshGroups,
