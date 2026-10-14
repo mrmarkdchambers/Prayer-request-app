@@ -4,7 +4,7 @@ import { createPrayer, filterPrayers } from './prayers';
 import { buildSession, followUpsDue, isScheduledFor } from './session';
 import { reducer } from './reducer';
 import { emptyData, type Prayer } from './types';
-import { computeStats, answeredByMonth } from './stats';
+import { computeStats, praiseByMonth } from './stats';
 import { dailyReminderIcs, mergeData, normalizeData, parseCsv, prayersFromCsv, toCsv, toJson } from './exportImport';
 
 const day = (s: string) => new Date(`${s}T12:00:00`);
@@ -124,8 +124,8 @@ describe('stats', () => {
       prayer({ status: 'answered', createdAt: day('2025-01-01').toISOString(), answeredAt: day('2025-01-31').toISOString() }),
       prayer({ prayedCount: 2 }),
     ];
-    expect(computeStats(list, now)).toEqual({ active: 1, answered: 2, answeredThisYear: 1, totalPrayers: 5, averageDaysToAnswer: 20 });
-    expect(answeredByMonth(list)).toHaveLength(2);
+    expect(computeStats(list, now)).toEqual({ active: 1, answered: 2, praiseReports: 0, praiseThisYear: 1, totalPrayers: 5, averageDaysToAnswer: 20 });
+    expect(praiseByMonth(list)).toHaveLength(2);
   });
 });
 
@@ -170,5 +170,47 @@ describe('export / import', () => {
     expect(ics).toContain('DTSTART:20261011T073000');
     expect(ics).toContain('RRULE:FREQ=DAILY');
     expect(ics).toContain('DESCRIPTION:Open Intercede: https://example.com');
+  });
+});
+
+describe('praise reports', () => {
+  const now = day('2026-10-11');
+
+  it('are created straight into the Praise timeline, dated when they happened', () => {
+    let data = reducer(emptyData(), { type: 'add', input: { title: 'Mum is home', kind: 'praise', praisedAt: day('2026-10-09').toISOString() }, now });
+    const p = data.prayers[0];
+    expect(p).toMatchObject({ kind: 'praise', status: 'answered', answeredAt: day('2026-10-09').toISOString() });
+    data = reducer(data, { type: 'add', input: { title: 'Today', kind: 'praise' }, now });
+    expect(data.prayers[0].answeredAt).toBe(now.toISOString());
+  });
+
+  it('never come up in the daily session or follow-ups', () => {
+    const praise = createPrayer({ title: 'Thanks', kind: 'praise', followUpOn: '2026-10-01' }, now);
+    expect(buildSession([praise], now, 5)).toEqual([]);
+    expect(followUpsDue([praise], now)).toEqual([]);
+  });
+
+  it('count separately from answered prayers, but share the timeline', () => {
+    const answered = prayer({ status: 'answered', createdAt: day('2026-10-01').toISOString(), answeredAt: day('2026-10-05').toISOString() });
+    const praise = createPrayer({ title: 'Thanks', kind: 'praise', praisedAt: day('2026-10-10').toISOString() }, now);
+    expect(computeStats([answered, praise], now)).toMatchObject({ answered: 1, praiseReports: 1, praiseThisYear: 2, averageDaysToAnswer: 4 });
+    expect(praiseByMonth([answered, praise])[0][1].map((p) => p.title)).toEqual(['Thanks', 'x']);
+  });
+
+  it('archive and restore back to the Praise timeline', () => {
+    let data = reducer(emptyData(), { type: 'add', input: { title: 'Thanks', kind: 'praise' }, now });
+    const id = data.prayers[0].id;
+    data = reducer(data, { type: 'archive', id, now });
+    expect(data.prayers[0].status).toBe('archived');
+    data = reducer(data, { type: 'reopen', id, now });
+    expect(data.prayers[0]).toMatchObject({ status: 'answered', answeredAt: now.toISOString() });
+  });
+
+  it('survive backups and spreadsheets, and old backups read as requests', () => {
+    const praise = createPrayer({ title: 'Thanks', kind: 'praise' }, now);
+    expect(normalizeData(JSON.parse(toJson({ ...emptyData(), prayers: [praise] }))).prayers[0].kind).toBe('praise');
+    expect(normalizeData({ prayers: [{ title: 'old' }] }).prayers[0].kind).toBe('request');
+    expect(prayersFromCsv(toCsv([praise]))[0]).toMatchObject({ kind: 'praise', status: 'answered' });
+    expect(prayersFromCsv('title\nPlain')[0].kind).toBe('request');
   });
 });

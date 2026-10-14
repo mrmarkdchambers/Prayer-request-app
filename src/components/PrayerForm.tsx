@@ -14,9 +14,24 @@ export interface PrayerFormValues {
   schedule: Schedule;
   followUpOn: string | null;
   groupId: string | null;
+  /** Praise reports only: the day it happened (YYYY-MM-DD). */
+  praisedOn?: string;
 }
 
-export function PrayerForm({ initial, submitLabel, onSubmit, onCancel }: { initial: PrayerFormValues; submitLabel: string; onSubmit: (v: PrayerFormValues) => void; onCancel: () => void }) {
+export function PrayerForm({
+  initial,
+  submitLabel,
+  onSubmit,
+  onCancel,
+  kind = 'request',
+}: {
+  initial: PrayerFormValues;
+  submitLabel: string;
+  onSubmit: (v: PrayerFormValues) => void;
+  onCancel: () => void;
+  kind?: 'request' | 'praise';
+}) {
+  const praise = kind === 'praise';
   const [v, setV] = useState(initial);
   const { userId, groups } = useAccount();
   const canShare = !!userId && !!groups && (groups.length > 0 || v.groupId !== null);
@@ -32,15 +47,21 @@ export function PrayerForm({ initial, submitLabel, onSubmit, onCancel }: { initi
     <form className="form" onSubmit={submit}>
       <PeopleList />
       <label className="field">
-        What are you praying for?
-        <input required value={v.title} onChange={(e) => set('title', e.target.value)} placeholder="Healing after surgery" autoFocus />
+        {praise ? 'What are you thankful for?' : 'What are you praying for?'}
+        <input
+          required
+          value={v.title}
+          onChange={(e) => set('title', e.target.value)}
+          placeholder={praise ? 'Mum is home from hospital' : 'Healing after surgery'}
+          autoFocus
+        />
       </label>
       <label className="field">
-        For whom <span className="muted">(optional)</span>
+        {praise ? 'Who it’s about' : 'For whom'} <span className="muted">(optional)</span>
         <input value={v.person} onChange={(e) => set('person', e.target.value)} placeholder="Sarah" list="people" />
       </label>
       <label className="field">
-        Details <span className="muted">(optional)</span>
+        {praise ? 'The story' : 'Details'} <span className="muted">(optional)</span>
         <textarea rows={4} value={v.details} onChange={(e) => set('details', e.target.value)} />
       </label>
       <TagInput value={v.tags} onChange={(t) => set('tags', t)} />
@@ -62,11 +83,20 @@ export function PrayerForm({ initial, submitLabel, onSubmit, onCancel }: { initi
           </select>
         </label>
       )}
-      <ScheduleField value={v.schedule} onChange={(s) => set('schedule', s)} />
-      <label className="field">
-        Follow up on <span className="muted">(optional, e.g. check in after the appointment)</span>
-        <input type="date" value={v.followUpOn ?? ''} onChange={(e) => set('followUpOn', e.target.value || null)} />
-      </label>
+      {praise ? (
+        <label className="field">
+          When
+          <input type="date" required value={v.praisedOn ?? ''} onChange={(e) => set('praisedOn', e.target.value)} />
+        </label>
+      ) : (
+        <>
+          <ScheduleField value={v.schedule} onChange={(s) => set('schedule', s)} />
+          <label className="field">
+            Follow up on <span className="muted">(optional, e.g. check in after the appointment)</span>
+            <input type="date" value={v.followUpOn ?? ''} onChange={(e) => set('followUpOn', e.target.value || null)} />
+          </label>
+        </>
+      )}
       <div className="row">
         <button type="submit" className="btn btn-primary">
           {submitLabel}

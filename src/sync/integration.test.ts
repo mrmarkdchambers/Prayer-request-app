@@ -76,6 +76,19 @@ describe.skipIf(!URL)('Supabase backend', () => {
     expect(laptop.prayers).toEqual([]);
   });
 
+  it('syncs praise reports as praise, and old-style rows as requests', async () => {
+    let phone: AppData = reducer(emptyData(), { type: 'add', input: { title: 'Thank you for rain', kind: 'praise' } });
+    phone = await syncDevice(alice.sb, alice.id, phone);
+    const laptop = await syncDevice(alice.sb, alice.id, emptyData());
+    const synced = laptop.prayers.find((p) => p.title === 'Thank you for rain')!;
+    expect(synced).toMatchObject({ kind: 'praise', status: 'answered' });
+    expect(pendingPush(laptop)).toEqual({ upserts: [], deletes: [] });
+    // Requests are sent without a kind, so they still sync with a database from before praise reports.
+    expect(toRow(createPrayer({ title: 'r' }), alice.id)).not.toHaveProperty('kind');
+    phone = reducer(phone, { type: 'delete', id: synced.id });
+    await syncDevice(alice.sb, alice.id, phone);
+  });
+
   it('lets people create and join groups by invite code', async () => {
     groupId = await api.createGroup(alice.sb, 'Tuesday small group');
     const [group] = await api.listGroups(alice.sb);
@@ -130,7 +143,7 @@ describe.skipIf(!URL)('Supabase backend', () => {
 
     const today = new Date().toISOString().slice(0, 10);
     const forMe = await api.prayedForMe(alice.sb, alice.id, today);
-    expect(forMe).toEqual([{ prayerId: shared.id, title: 'Mum surgery Friday', people: ['Bob'] }]);
+    expect(forMe).toEqual([{ prayerId: shared.id, kind: 'request', title: 'Mum surgery Friday', people: ['Bob'] }]);
 
     await expect(api.prayFor(carol.sb, shared.id, carol.id)).rejects.toThrow();
     expect(await api.intercessionsFor(carol.sb, shared.id)).toEqual([]);

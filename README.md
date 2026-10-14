@@ -10,7 +10,7 @@ See [docs/RESEARCH.md](docs/RESEARCH.md) for the market research and feature pla
 - **Bulk add**: paste a whole list, one request per line.
 - **Daily prayer session**: a focused, one-at-a-time view. Prayers set to a fixed day (daily, certain weekdays, or monthly) are always included. The rest rotate, least recently prayed first, taking turns across tags. Swipe or use the keyboard. Optional timer.
 - **Request timeline**: post updates on a request ("surgery moved to Tuesday"), mark it answered with a note, archive it, or move it back to active.
-- **Answered journal**: answered prayers grouped by month, with how long each one took and stats.
+- **Praise**: answered prayers and praise reports (things to give thanks for) in one timeline by month, with stats. Praise reports can be shared with a group, where members can respond with "Praise God".
 - **Follow-ups**: set a date to check in, and it shows on Today when due.
 - **Search and filters**: by text, status, tag, or person.
 - **Prayer counts**: how many times you've prayed for each request, and when you last did.
@@ -54,6 +54,8 @@ npx supabase status           # shows the local API URL and anon key
 ```
 
 Put the local URL and anon key in `.env.local` as `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`, then run `npm run dev`. Sign-in emails go to the local mail viewer at http://127.0.0.1:54324.
+
+**Updating the live database:** the Supabase GitHub integration hasn't been applying migrations to this project, so run `python3 scripts/make-db-update.py > database-update.sql` and paste the output into the dashboard's SQL Editor. It's safe to run any number of times.
 
 `npm run test:integration` runs the backend tests (privacy rules, group permissions, two-device sync) against the local stack.
 

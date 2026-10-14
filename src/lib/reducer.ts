@@ -56,13 +56,18 @@ export function reducer(data: AppData, action: Action): AppData {
         updates: [...p.updates, makeUpdate('answered', action.note || 'Marked as answered', now)],
       }));
     case 'reopen':
-      return patchPrayer(data, action.id, now, (p) => ({
+      return patchPrayer(data, action.id, now, (p) =>
+        p.kind === 'praise'
+          ? // An archived praise report comes back to the Praise timeline.
+            { ...p, status: 'answered', updates: [...p.updates, makeUpdate('reopened', 'Restored', now)] }
+          : {
         ...p,
         status: 'active',
         answeredAt: null,
         answerNote: '',
         updates: [...p.updates, makeUpdate('reopened', 'Moved back to active', now)],
-      }));
+            },
+      );
     case 'archive':
       return patchPrayer(data, action.id, now, (p) => ({
         ...p,

@@ -2,7 +2,7 @@ import { useEffect, useState, type FormEvent } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useStore } from '../store';
 import { scheduleLabel } from '../lib/prayers';
-import { waitedLabel, formatDate, formatRelative, isSameDay } from '../lib/util';
+import { waitedLabel, formatDate, formatRelative, isSameDay, dayKey, dayToIso } from '../lib/util';
 import { PrayerForm } from '../components/PrayerForm';
 import { Dialog } from '../components/Dialog';
 import { Icon } from '../components/Icon';
@@ -46,11 +46,14 @@ export function PrayerPage() {
     );
   }
 
+  const praise = prayer.kind === 'praise';
+
   if (editing) {
     return (
       <div className="stack narrow">
         <h1>Edit prayer</h1>
         <PrayerForm
+          kind={prayer.kind}
           initial={{
             title: prayer.title,
             person: prayer.person,
@@ -60,10 +63,13 @@ export function PrayerPage() {
             schedule: prayer.schedule,
             followUpOn: prayer.followUpOn,
             groupId: prayer.groupId,
+            praisedOn: prayer.answeredAt ? dayKey(new Date(prayer.answeredAt)) : undefined,
           }}
           submitLabel="Save"
           onSubmit={(v) => {
-            dispatch({ type: 'edit', id: prayer.id, patch: v });
+            const { praisedOn, ...fields } = v;
+            const patch = praise && praisedOn ? { ...fields, answeredAt: dayToIso(praisedOn) } : fields;
+            dispatch({ type: 'edit', id: prayer.id, patch });
             setEditing(false);
             toast('Saved');
           }}
@@ -83,13 +89,17 @@ export function PrayerPage() {
 
   return (
     <div className="stack narrow">
-      <Link to="/prayers" className="back">
-        <Icon name="back" /> Prayers
+      <Link to={praise ? '/praise' : '/prayers'} className="back">
+        <Icon name="back" /> {praise ? 'Praise' : 'Prayers'}
       </Link>
       <header className="stack-sm">
         <div className="row space-between wrap">
           <h1>{prayer.title}</h1>
-          {prayer.status !== 'active' && <span className={`badge badge-${prayer.status}`}>{prayer.status}</span>}
+          {praise ? (
+            <span className="badge badge-praise">{prayer.status === 'archived' ? 'archived' : 'praise'}</span>
+          ) : (
+            prayer.status !== 'active' && <span className={`badge badge-${prayer.status}`}>{prayer.status}</span>
+          )}
         </div>
         {prayer.person && <p className="person">for {prayer.person}</p>}
         {prayer.tags.length > 0 && (
@@ -126,7 +136,7 @@ export function PrayerPage() {
       {prayer.details && <p className="details">{prayer.details}</p>}
       {prayer.scripture && <blockquote className="scripture">{prayer.scripture}</blockquote>}
 
-      {prayer.status === 'answered' && prayer.answeredAt && (
+      {!praise && prayer.status === 'answered' && prayer.answeredAt && (
         <section className="card answered-card">
           <h2>Answered {formatDate(prayer.answeredAt)}</h2>
           {prayer.answerNote && <p>{prayer.answerNote}</p>}
@@ -134,6 +144,14 @@ export function PrayerPage() {
         </section>
       )}
 
+      {praise ? (
+        <dl className="facts">
+          <div>
+            <dt>Praise report</dt>
+            <dd>{prayer.answeredAt ? formatDate(prayer.answeredAt) : formatDate(prayer.createdAt)}</dd>
+          </div>
+        </dl>
+      ) : (
       <dl className="facts">
         <div>
           <dt>Prayed</dt>
@@ -157,6 +175,7 @@ export function PrayerPage() {
           </div>
         )}
       </dl>
+      )}
 
       <div className="row wrap">
         {prayer.status === 'active' && (
@@ -179,13 +198,13 @@ export function PrayerPage() {
         <button type="button" className="btn" onClick={() => setEditing(true)}>
           <Icon name="edit" /> Edit
         </button>
-        {prayer.status === 'active' ? (
+        {prayer.status === 'active' || (praise && prayer.status === 'answered') ? (
           <button type="button" className="btn" onClick={() => dispatch({ type: 'archive', id: prayer.id })}>
             Archive
           </button>
         ) : (
           <button type="button" className="btn" onClick={() => dispatch({ type: 'reopen', id: prayer.id })}>
-            Move back to active
+            {praise ? 'Restore' : 'Move back to active'}
           </button>
         )}
         <button type="button" className="btn btn-danger-ghost" onClick={() => setDeleteOpen(true)}>
@@ -222,7 +241,7 @@ export function PrayerPage() {
             <div className="timeline-meta">
               <time dateTime={prayer.createdAt}>{formatDate(prayer.createdAt)}</time>
             </div>
-            <p>Request added</p>
+            <p>{praise ? 'Praise report added' : 'Request added'}</p>
           </li>
         </ol>
       </section>

@@ -1,4 +1,4 @@
-import type { Prayer, PrayerUpdate, Schedule, Status } from '../lib/types';
+import type { Kind, Prayer, PrayerUpdate, Schedule, Status } from '../lib/types';
 import { changedAt, type RemotePrayer } from '../lib/sync';
 import { normalizeData } from '../lib/exportImport';
 
@@ -6,6 +6,8 @@ export interface PrayerRow {
   id: string;
   owner_id: string;
   group_id: string | null;
+  /** Absent on databases from before praise reports; means 'request'. */
+  kind?: Kind;
   title: string;
   details: string;
   person: string;
@@ -36,6 +38,8 @@ export function toRow(p: Prayer, ownerId: string): PrayerRow {
     id: p.id,
     owner_id: ownerId,
     group_id: p.groupId,
+    // Only sent for praise reports, so requests still sync with a database that predates them.
+    ...(p.kind === 'praise' ? { kind: 'praise' as const } : {}),
     title: p.title,
     details: p.details,
     person: p.person,
@@ -89,6 +93,7 @@ export function fromRow(r: PrayerRow): RemotePrayer {
     prayers: [
       {
         id: r.id,
+        kind: r.kind ?? 'request',
         title: r.title || '(deleted)',
         details: r.details,
         person: r.person,

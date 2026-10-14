@@ -40,3 +40,8 @@ export function waitedLabel(fromIso: string, toIso: string): string {
   const d = daysBetween(fromIso, toIso);
   return d <= 0 ? 'the same day' : d === 1 ? 'after 1 day' : `after ${d} days`;
 }
+
+/** A calendar day (YYYY-MM-DD) as a timestamp: now if it's today, otherwise midday that day. */
+export function dayToIso(day: string, now = new Date()): string {
+  return day === dayKey(now) ? now.toISOString() : new Date(`${day}T12:00:00`).toISOString();
+}

@@ -135,6 +135,7 @@ export interface Intercession {
 
 export interface SharedPrayer {
   id: string;
+  kind: 'request' | 'praise';
   ownerId: string;
   ownerName: string;
   title: string;
@@ -152,6 +153,7 @@ export interface SharedPrayer {
 
 interface SharedRow {
   id: string;
+  kind?: 'request' | 'praise';
   owner_id: string;
   owner_name: string;
   title: string;
@@ -172,6 +174,7 @@ export async function groupPrayers(sb: SupabaseClient, groupId: string): Promise
   const rows = check(await sb.rpc('group_requests', { gid: groupId })) as SharedRow[];
   return rows.map((r) => ({
     id: r.id,
+    kind: r.kind ?? 'request',
     ownerId: r.owner_id,
     ownerName: r.owner_name || 'Someone',
     title: r.title,
@@ -206,6 +209,7 @@ export async function intercessionsFor(sb: SupabaseClient, prayerId: string): Pr
 
 export interface PrayedForYou {
   prayerId: string;
+  kind: 'request' | 'praise';
   title: string;
   people: string[];
 }
@@ -215,14 +219,14 @@ export async function prayedForMe(sb: SupabaseClient, userId: string, sinceDay: 
   const rows = check(
     await sb
       .from('intercessions')
-      .select('prayer_id, user_id, profiles(display_name), prayers!inner(title, owner_id)')
+      .select('prayer_id, user_id, profiles(display_name), prayers!inner(*)')
       .eq('prayers.owner_id', userId)
       .neq('user_id', userId)
       .gte('prayed_on', sinceDay),
-  ) as unknown as { prayer_id: string; user_id: string; profiles: { display_name: string } | null; prayers: { title: string } }[];
+  ) as unknown as { prayer_id: string; user_id: string; profiles: { display_name: string } | null; prayers: { title: string; kind?: 'request' | 'praise' } }[];
   const byPrayer = new Map<string, PrayedForYou>();
   for (const r of rows) {
-    const entry = byPrayer.get(r.prayer_id) ?? { prayerId: r.prayer_id, title: r.prayers.title, people: [] };
+    const entry = byPrayer.get(r.prayer_id) ?? { prayerId: r.prayer_id, kind: r.prayers.kind ?? 'request', title: r.prayers.title, people: [] };
     const name = r.profiles?.display_name || 'Someone';
     if (!entry.people.includes(name)) entry.people.push(name);
     byPrayer.set(r.prayer_id, entry);

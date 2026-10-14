@@ -16,17 +16,21 @@ function SharedPrayerCard({ prayer, me, onPray }: { prayer: api.SharedPrayer; me
   const today = dayKey(new Date());
   const mine = prayer.ownerId === me;
   const prayedToday = prayer.intercessions.some((i) => i.userId === me && i.prayedOn === today);
-  const people = [...new Set(prayer.intercessions.map((i) => i.displayName))];
+  // You first, as "you"; then everyone else.
+  const people = [...new Set(prayer.intercessions.map((i) => (i.userId === me ? 'you' : i.displayName)))].sort((x, y) =>
+    x === 'you' ? -1 : y === 'you' ? 1 : 0,
+  );
   const latest = prayer.updates.filter((u) => u.kind === 'note').at(-1);
+  const praise = prayer.kind === 'praise';
 
   return (
-    <article className={`card prayer-card status-${prayer.status}`}>
+    <article className={`card prayer-card ${prayer.kind === 'praise' ? 'kind-praise-card' : `status-${prayer.status}`}`}>
       <div className="card-head">
         <h3>{prayer.title}</h3>
-        {prayer.status === 'answered' && <span className="badge badge-answered">answered</span>}
+        {praise ? <span className="badge badge-praise">praise</span> : prayer.status === 'answered' && <span className="badge badge-answered">answered</span>}
       </div>
       <p className="meta">
-        {mine ? 'Your request' : `From ${prayer.ownerName}`}
+        {mine ? (praise ? 'Your praise report' : 'Your request') : `From ${prayer.ownerName}`}
         {prayer.person && <> · for {prayer.person}</>} · {formatRelative(prayer.createdAt)}
       </p>
       {prayer.details && <p className="details">{prayer.details}</p>}
@@ -35,22 +39,24 @@ function SharedPrayerCard({ prayer, me, onPray }: { prayer: api.SharedPrayer; me
           Update ({formatRelative(latest.at)}): {latest.text}
         </p>
       )}
-      {prayer.status === 'answered' && prayer.answerNote && <p className="answer-note">Praise: {prayer.answerNote}</p>}
+      {!praise && prayer.status === 'answered' && prayer.answerNote && <p className="answer-note">Praise: {prayer.answerNote}</p>}
       <p className="meta">
         {people.length === 0
-          ? 'No one has prayed yet.'
-          : `Prayed for by ${people.slice(0, 3).join(', ')}${people.length > 3 ? ` and ${people.length - 3} more` : ''}.`}
+          ? praise
+            ? 'Be the first to give thanks.'
+            : 'No one has prayed yet.'
+          : `${praise ? 'Praising God' : 'Prayed for by'} ${praise ? 'with ' : ''}${people.slice(0, 3).join(', ')}${people.length > 3 ? ` and ${people.length - 3} more` : ''}.`}
       </p>
       <div className="row wrap">
-        {prayer.status === 'active' &&
+        {(prayer.status === 'active' || praise) &&
           !mine &&
           (prayedToday ? (
             <span className="prayed-badge">
-              <Icon name="check" size={16} /> You prayed today
+              <Icon name="check" size={16} /> {praise ? 'You praised God for this' : 'You prayed today'}
             </span>
           ) : (
             <button type="button" className="btn btn-primary" onClick={onPray}>
-              <Icon name="hands" /> I prayed
+              <Icon name={praise ? 'star' : 'hands'} /> {praise ? 'Praise God' : 'I prayed'}
             </button>
           ))}
         {mine && (
@@ -101,7 +107,7 @@ export function GroupPage() {
     );
     try {
       await api.prayFor(supabase, prayerId, me);
-      toast('Amen');
+      toast(prayers?.find((p) => p.id === prayerId)?.kind === 'praise' ? 'Praise God!' : 'Amen');
     } catch {
       toast("Couldn't save that. Check your connection.");
       refresh();
@@ -137,8 +143,11 @@ export function GroupPage() {
     setConfirm(null);
   };
 
-  const active = prayers?.filter((p) => p.status === 'active') ?? [];
-  const answered = prayers?.filter((p) => p.status === 'answered') ?? [];
+  const active = prayers?.filter((p) => p.kind === 'request' && p.status === 'active') ?? [];
+  // Praise reports and answered requests, most recent first.
+  const praiseItems = (prayers?.filter((p) => p.status === 'answered') ?? []).sort((a, b) =>
+    (b.answeredAt ?? b.updatedAt).localeCompare(a.answeredAt ?? a.updatedAt),
+  );
 
   return (
     <div className="stack narrow">
@@ -187,6 +196,9 @@ export function GroupPage() {
         <Link to={`/prayers/new?group=${group.id}`} className="btn btn-primary">
           <Icon name="plus" /> Share a request
         </Link>
+        <Link to={`/praise/new?group=${group.id}`} className="btn">
+          <Icon name="star" /> Share a praise report
+        </Link>
       </div>
 
       <section className="stack-sm" aria-labelledby="requests">
@@ -201,11 +213,11 @@ export function GroupPage() {
         ))}
       </section>
 
-      {answered.length > 0 && (
+      {praiseItems.length > 0 && (
         <section className="stack-sm">
-          <h2 className="section-title">Answered</h2>
-          {answered.map((p) => (
-            <SharedPrayerCard key={p.id} prayer={p} me={me} onPray={() => {}} />
+          <h2 className="section-title">Praise</h2>
+          {praiseItems.map((p) => (
+            <SharedPrayerCard key={p.id} prayer={p} me={me} onPray={() => pray(p.id)} />
           ))}
         </section>
       )}

@@ -155,6 +155,23 @@ describe.skipIf(!URL_)('notifications', () => {
     expect(messagesFor(bobLaptop)).toHaveLength(2);
   });
 
+  it('shares praise reports with the group, with a Praise God reaction', async () => {
+    const praise = createPrayer({ title: 'Dad got the job!', kind: 'praise', groupId });
+    await api.pushChanges(alice.sb, alice.id, { upserts: [praise], deletes: [] });
+    await deliver();
+    expect(messagesFor(bobLaptop).at(-1)).toEqual({ title: 'New praise report in Tuesday group', body: 'Alice: Dad got the job!', url: `/#/groups/${groupId}` });
+
+    const seen = (await api.groupPrayers(bob.sb, groupId)).find((p) => p.id === praise.id)!;
+    expect(seen).toMatchObject({ kind: 'praise', status: 'answered', title: 'Dad got the job!' });
+    await api.prayFor(bob.sb, praise.id, bob.id);
+    await deliver();
+    expect(messagesFor(alicePhone).at(-1)).toEqual({ title: 'Bob is praising God with you', body: 'Dad got the job!', url: `/#/prayers/${praise.id}` });
+
+    // Editing it later doesn't announce it again.
+    await api.pushChanges(alice.sb, alice.id, { upserts: [{ ...praise, details: 'Starts Monday', updatedAt: new Date().toISOString() }], deletes: [] });
+    expect(await deliver()).toMatchObject({ notifications: 0 });
+  });
+
   it('respects notification settings', async () => {
     await api.saveNotificationSettings(bob.sb, bob.id, { ...api.DEFAULT_NOTIFICATION_SETTINGS, groupActivity: false });
     await api.pushChanges(alice.sb, alice.id, { upserts: [createPrayer({ title: 'Quiet one', groupId })], deletes: [] });

@@ -1,4 +1,4 @@
-import type { Prayer, Schedule, PrayerUpdate, UpdateKind } from './types';
+import type { Kind, Prayer, Schedule, PrayerUpdate, UpdateKind } from './types';
 import { newId } from './util';
 import { uniqueTags } from './tags';
 
@@ -11,10 +11,14 @@ export interface NewPrayerInput {
   schedule?: Schedule;
   followUpOn?: string | null;
   groupId?: string | null;
+  kind?: Kind;
+  /** For praise reports: when it happened (defaults to now). */
+  praisedAt?: string;
 }
 
 export function createPrayer(input: NewPrayerInput, now = new Date()): Prayer {
   const at = now.toISOString();
+  const praise = input.kind === 'praise';
   return {
     id: newId(),
     title: input.title.trim(),
@@ -22,11 +26,12 @@ export function createPrayer(input: NewPrayerInput, now = new Date()): Prayer {
     person: input.person?.trim() ?? '',
     tags: uniqueTags(input.tags ?? []),
     scripture: input.scripture?.trim() ?? '',
-    status: 'active',
+    kind: praise ? 'praise' : 'request',
+    status: praise ? 'answered' : 'active',
     schedule: input.schedule ?? { kind: 'auto' },
     createdAt: at,
     updatedAt: at,
-    answeredAt: null,
+    answeredAt: praise ? (input.praisedAt ?? at) : null,
     answerNote: '',
     prayedCount: 0,
     lastPrayedAt: null,

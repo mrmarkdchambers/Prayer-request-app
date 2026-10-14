@@ -312,3 +312,6 @@ span.chip { cursor: default; }
 @media (max-width: 640px) {
   .topbar { padding-top: max(10px, env(safe-area-inset-top)); }
 }
+.badge-praise { background: color-mix(in srgb, var(--accent) 18%, transparent); color: var(--accent); }
+.kind-praise::before { background: var(--accent); border-color: var(--accent); }
+.kind-praise-card { border-left: 4px solid var(--accent); }

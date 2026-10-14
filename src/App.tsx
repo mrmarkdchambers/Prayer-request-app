@@ -15,7 +15,7 @@ import { ListPage } from './pages/ListPage';
 import { PrayerPage } from './pages/PrayerPage';
 import { NewPrayerPage } from './pages/NewPrayerPage';
 import { SessionPage } from './pages/SessionPage';
-import { AnsweredPage } from './pages/AnsweredPage';
+import { PraisePage } from './pages/PraisePage';
 import { SettingsPage } from './pages/SettingsPage';
 import { SupportPage } from './pages/SupportPage';
 import { PrintPage } from './pages/PrintPage';
@@ -26,7 +26,7 @@ const NAV: { to: string; label: string; icon: IconName; needsAccount?: boolean }
   { to: '/', label: 'Today', icon: 'sun' },
   { to: '/prayers', label: 'Prayers', icon: 'list' },
   { to: '/groups', label: 'Groups', icon: 'users', needsAccount: true },
-  { to: '/answered', label: 'Answered', icon: 'star' },
+  { to: '/praise', label: 'Praise', icon: 'star' },
   { to: '/settings', label: 'Settings', icon: 'gear' },
 ];
 
@@ -78,7 +78,10 @@ function Shell() {
           <Route path="/prayers/new" element={<NewPrayerPage />} />
           <Route path="/prayers/:id" element={<PrayerPage />} />
           <Route path="/session" element={<SessionPage />} />
-          <Route path="/answered" element={<AnsweredPage />} />
+          <Route path="/praise" element={<PraisePage />} />
+          <Route path="/praise/new" element={<NewPrayerPage kind="praise" />} />
+          {/* Old address, kept so bookmarks and earlier notifications still work. */}
+          <Route path="/answered" element={<PraisePage />} />
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="/support" element={<SupportPage />} />
           <Route path="/print" element={<PrintPage />} />

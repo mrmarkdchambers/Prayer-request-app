@@ -41,6 +41,7 @@ function normalizePrayer(v: unknown): Prayer | null {
     person: str(o.person),
     tags: Array.isArray(o.tags) ? uniqueTags(o.tags.filter((t): t is string => typeof t === 'string')) : [],
     scripture: str(o.scripture),
+    kind: o.kind === 'praise' ? 'praise' : 'request',
     status,
     schedule: normalizeSchedule(o.schedule),
     createdAt: str(o.createdAt, now),
@@ -117,7 +118,7 @@ export function mergeData(current: AppData, incoming: AppData): { data: AppData;
 
 // ---------- CSV ----------
 
-const CSV_COLUMNS = ['title', 'details', 'person', 'tags', 'scripture', 'status', 'createdAt', 'answeredAt', 'answerNote', 'prayedCount'] as const;
+const CSV_COLUMNS = ['kind', 'title', 'details', 'person', 'tags', 'scripture', 'status', 'createdAt', 'answeredAt', 'answerNote', 'prayedCount'] as const;
 
 function csvCell(v: string | number | null): string {
   const s = v === null ? '' : String(v);
@@ -182,12 +183,15 @@ export function prayersFromCsv(text: string): Prayer[] {
     answeredAt: idx('answeredat', 'answered'),
     answerNote: idx('answernote', 'answer'),
     prayedCount: idx('prayedcount'),
+    kind: idx('kind', 'type'),
   };
   const out: Prayer[] = [];
   for (const r of rows) {
     const title = get(r, titleIdx);
     if (!title) continue;
+    const kind = /^praise/i.test(get(r, c.kind)) ? 'praise' : 'request';
     const p = createPrayer({
+      kind,
       title,
       details: get(r, c.details),
       person: get(r, c.person),

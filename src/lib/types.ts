@@ -1,6 +1,14 @@
 export type Status = 'active' | 'answered' | 'archived';
 
 /**
+ * A prayer request, or a praise report (something to give thanks for).
+ * Praise reports are stored with status 'answered' and answeredAt set to the
+ * day of the praise, so they sit in the Praise timeline beside answered prayers
+ * and never come up in the daily prayer session.
+ */
+export type Kind = 'request' | 'praise';
+
+/**
  * When a prayer comes up in the daily session.
  * - auto: rotates in when it's been the longest since you prayed for it
  * - daily: every day
@@ -29,6 +37,7 @@ export interface Prayer {
   person: string;
   tags: string[];
   scripture: string;
+  kind: Kind;
   status: Status;
   schedule: Schedule;
   createdAt: string;

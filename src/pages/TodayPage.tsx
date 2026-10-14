@@ -93,7 +93,8 @@ export function TodayPage() {
           <ul className="list-plain stack-sm">
             {prayedForMe.map((p) => (
               <li key={p.prayerId}>
-                <strong>{p.people.join(', ')}</strong> prayed for <Link to={`/prayers/${p.prayerId}`}>{p.title}</Link> this week.
+                <strong>{p.people.join(', ')}</strong> {p.kind === 'praise' ? 'praised God with you for' : 'prayed for'}{' '}
+                <Link to={`/prayers/${p.prayerId}`}>{p.title}</Link> this week.
               </li>
             ))}
           </ul>
@@ -115,8 +116,8 @@ export function TodayPage() {
           <Link to="/prayers" className="stat">
             <strong>{stats.active}</strong> active
           </Link>
-          <Link to="/answered" className="stat">
-            <strong>{stats.answered}</strong> answered
+          <Link to="/praise" className="stat">
+            <strong>{stats.answered + stats.praiseReports}</strong> praise
           </Link>
           <div className="stat">
             <strong>{stats.totalPrayers}</strong> prayers prayed
