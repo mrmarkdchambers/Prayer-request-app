@@ -2,7 +2,8 @@ import { useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useStore } from '../store';
 import { dailyReminderIcs, mergeData, normalizeData, prayersFromCsv, toCsv, toJson } from '../lib/exportImport';
-import { download } from '../lib/download';
+import { saveFile } from '../native';
+import { PhoneReminder } from '../components/PhoneReminder';
 import { dayKey } from '../lib/util';
 import { emptyData, type Theme } from '../lib/types';
 import { Dialog } from '../components/Dialog';
@@ -66,29 +67,38 @@ export function SettingsPage() {
           />
         </label>
         <p className="muted">Prayers set to a fixed day are always included; the rest rotate so everything gets prayed for.</p>
-        {!account.userId && (
-          <label className="inline">
-            Reminder time
-            <input type="time" value={s.reminderTime} onChange={(e) => e.target.value && dispatch({ type: 'settings', patch: { reminderTime: e.target.value } })} />
-          </label>
+        {isNativeApp ? (
+          <>
+            <PhoneReminder />
+            <p className="muted">This reminder is set on this phone, so it works offline and without an account.</p>
+          </>
+        ) : (
+          <>
+            {!account.userId && (
+              <label className="inline">
+                Reminder time
+                <input type="time" value={s.reminderTime} onChange={(e) => e.target.value && dispatch({ type: 'settings', patch: { reminderTime: e.target.value } })} />
+              </label>
+            )}
+            <div className="row wrap">
+              <button type="button" className="btn" onClick={() => saveFile(`${APP_SLUG}-reminder.ics`, dailyReminderIcs(s.reminderTime, publicUrl, APP_NAME), 'text/calendar')}>
+                <Icon name="calendar" /> Add daily reminder to my calendar
+              </button>
+              {permission === 'default' && !account.userId && (
+                <button type="button" className="btn" onClick={async () => setPermission(await Notification.requestPermission())}>
+                  Allow notifications
+                </button>
+              )}
+            </div>
+            <p className="muted">
+              {account.userId
+                ? 'Set your daily reminder under Notifications above, or add one to your calendar.'
+                : 'The calendar reminder works even when this app is closed. Sign in to get reminders as notifications on your phone.'}
+              {!account.userId && permission === 'granted' && ' Notifications are on while the app is open.'}
+              {!account.userId && permission === 'denied' && ' Notifications are blocked in your browser settings.'}
+            </p>
+          </>
         )}
-        <div className="row wrap">
-          <button type="button" className="btn" onClick={() => download(`${APP_SLUG}-reminder.ics`, dailyReminderIcs(s.reminderTime, publicUrl, APP_NAME), 'text/calendar')}>
-            <Icon name="calendar" /> Add daily reminder to my calendar
-          </button>
-          {permission === 'default' && !account.userId && (
-            <button type="button" className="btn" onClick={async () => setPermission(await Notification.requestPermission())}>
-              Allow notifications
-            </button>
-          )}
-        </div>
-        <p className="muted">
-          {account.userId
-            ? 'Set your daily reminder under Notifications above, or add one to your calendar.'
-            : 'The calendar reminder works even when this app is closed. Sign in to get reminders as notifications on your phone.'}
-          {!account.userId && permission === 'granted' && ' Notifications are on while the app is open.'}
-          {!account.userId && permission === 'denied' && ' Notifications are blocked in your browser settings.'}
-        </p>
       </section>
 
       <section className="card stack-sm">
@@ -96,18 +106,20 @@ export function SettingsPage() {
         <p className="muted">
           {account.userId
             ? 'Your prayers are saved to your account and kept on this device for offline use. You can also download your own copy at any time.'
-            : 'Your prayers are stored only in this browser. Export a backup now and then, especially before clearing browser data or switching devices.'}
+            : `Your prayers are stored only on this ${isNativeApp ? 'phone' : 'browser'}. Export a backup now and then, especially before ${isNativeApp ? 'uninstalling the app' : 'clearing browser data'} or switching devices.`}
         </p>
         <div className="row wrap">
-          <button type="button" className="btn" onClick={() => download(`${APP_SLUG}-backup-${stamp}.json`, toJson(data), 'application/json')}>
+          <button type="button" className="btn" onClick={() => saveFile(`${APP_SLUG}-backup-${stamp}.json`, toJson(data), 'application/json').catch(() => toast("Couldn't save the file"))}>
             Back up (JSON)
           </button>
-          <button type="button" className="btn" onClick={() => download(`${APP_SLUG}-${stamp}.csv`, toCsv(data.prayers), 'text/csv')}>
+          <button type="button" className="btn" onClick={() => saveFile(`${APP_SLUG}-${stamp}.csv`, toCsv(data.prayers), 'text/csv').catch(() => toast("Couldn't save the file"))}>
             Export spreadsheet (CSV)
           </button>
-          <Link to="/print" className="btn">
-            Print or save as PDF
-          </Link>
+          {!isNativeApp && (
+            <Link to="/print" className="btn">
+              Print or save as PDF
+            </Link>
+          )}
           <button type="button" className="btn" onClick={() => fileRef.current?.click()}>
             Import
           </button>

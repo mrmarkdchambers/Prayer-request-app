@@ -4,6 +4,7 @@ import { useStore } from '../store';
 import { supabase } from '../sync/client';
 import * as api from '../sync/api';
 import { disablePush, enablePush, isPushEnabled, pushSupport } from '../sync/push';
+import { isNativeApp } from '../platform';
 
 function localTimezone(): string {
   try {
@@ -104,6 +105,7 @@ export function NotificationsCard() {
             <input type="checkbox" checked={prefs.groupActivity} onChange={(e) => save({ ...prefs, groupActivity: e.target.checked })} />
             A group I'm in shares a new request or an answered prayer
           </label>
+          {!isNativeApp && (
           <label className="check">
             <input type="checkbox" checked={prefs.dailyReminder} onChange={(e) => save({ ...prefs, dailyReminder: e.target.checked })} />
             It's time for my daily prayers, at
@@ -114,9 +116,13 @@ export function NotificationsCard() {
               onChange={(e) => e.target.value && save({ ...prefs, reminderTime: e.target.value, dailyReminder: true })}
             />
           </label>
+          )}
         </fieldset>
       )}
-      <p className="muted">Notifications go to every device where you've turned them on. Each device can be turned off separately.</p>
+      <p className="muted">
+        Notifications go to every device where you've turned them on. Each device can be turned off separately.
+        {isNativeApp && " This phone's daily reminder is under Daily prayer below."}
+      </p>
     </section>
   );
 }

@@ -8,6 +8,7 @@ import { GroupPage } from './pages/GroupPage';
 import { JoinPage } from './pages/JoinPage';
 import { PrivacyPage } from './pages/PrivacyPage';
 import { listenForNotificationTaps } from './sync/push';
+import { listenForReminderTaps } from './native';
 import { useReminder } from './useReminder';
 import { TodayPage } from './pages/TodayPage';
 import { ListPage } from './pages/ListPage';
@@ -43,6 +44,7 @@ function useResumeJoin() {
 function useNotificationTaps() {
   const navigate = useNavigate();
   useEffect(() => listenForNotificationTaps(navigate), [navigate]);
+  useEffect(() => listenForReminderTaps(navigate), [navigate]);
 }
 
 function Shell() {
