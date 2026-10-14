@@ -163,10 +163,23 @@ describe.skipIf(!URL_)('notifications', () => {
     await expect(api.saveNotificationSettings(bob.sb, bob.id, { ...api.DEFAULT_NOTIFICATION_SETTINGS, timezone: 'Mars/Olympus' })).rejects.toThrow(/time zone/);
   });
 
+  /**
+   * A fixed-offset time zone where it's currently about `localHour` o'clock, so
+   * these tests behave the same whatever time of day they run.
+   */
+  function zoneAt(localHour: number): { timezone: string; local: Date } {
+    let offset = (localHour - new Date().getUTCHours() + 24) % 24;
+    if (offset > 14) offset -= 24;
+    // Etc/GMT zone names have the sign reversed: Etc/GMT-5 is UTC+5.
+    const timezone = offset === 0 ? 'UTC' : `Etc/GMT${offset > 0 ? '-' : '+'}${Math.abs(offset)}`;
+    return { timezone, local: new Date(Date.now() + offset * 3600_000) };
+  }
+  const hhmm = (d: Date) => `${String(d.getUTCHours()).padStart(2, '0')}:${String(d.getUTCMinutes()).padStart(2, '0')}`;
+
   it('sends the daily reminder once, at the chosen local time', async () => {
-    const now = new Date(Date.now() - 5 * 60_000);
-    const hhmm = `${String(now.getUTCHours()).padStart(2, '0')}:${String(now.getUTCMinutes()).padStart(2, '0')}`;
-    await api.saveNotificationSettings(alice.sb, alice.id, { ...api.DEFAULT_NOTIFICATION_SETTINGS, dailyReminder: true, reminderTime: hhmm, timezone: 'UTC' });
+    const { timezone, local } = zoneAt(12);
+    const reminderTime = hhmm(new Date(local.getTime() - 5 * 60_000));
+    await api.saveNotificationSettings(alice.sb, alice.id, { ...api.DEFAULT_NOTIFICATION_SETTINGS, dailyReminder: true, reminderTime, timezone });
     // Turning it on after today's time has passed doesn't fire one straight away.
     expect(await deliver()).toMatchObject({ reminders: 0 });
 
@@ -174,6 +187,17 @@ describe.skipIf(!URL_)('notifications', () => {
     await admin.from('notification_settings').update({ last_reminded_on: '2000-01-01' }).eq('user_id', alice.id);
     expect(await deliver()).toMatchObject({ reminders: 1, sent: 1 });
     expect(messagesFor(alicePhone).at(-1)).toEqual({ title: 'Time to pray', body: 'Your prayers for today are ready.', url: '/#/session' });
+    expect(await deliver()).toMatchObject({ reminders: 0 });
+  });
+
+  it('sends a late-evening reminder even when delivery runs just after midnight', async () => {
+    // It's about 00:mm locally and the reminder was set for 23:50 the evening before.
+    const { timezone } = zoneAt(0);
+    const admin = createClient(URL_!, SERVICE, opts);
+    await admin.from('notification_settings').update({ reminder_time: '23:50', timezone }).eq('user_id', alice.id);
+    // Changing the time marks the most recent one as already sent; pretend it wasn't.
+    await admin.from('notification_settings').update({ last_reminded_on: '2000-01-01' }).eq('user_id', alice.id);
+    expect(await deliver()).toMatchObject({ reminders: 1 });
     expect(await deliver()).toMatchObject({ reminders: 0 });
   });
 
