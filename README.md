@@ -21,7 +21,7 @@ See [docs/RESEARCH.md](docs/RESEARCH.md) for the market research and feature pla
 
 ### Accounts, sync and groups (optional, needs Supabase)
 
-- **Sign in with a 6-digit email code**: no password. Prayers made before signing in are added to the account.
+- **Sign in with a one-time email code**: no password. Prayers made before signing in are added to the account.
 - **Sync across devices**: works offline first. Changes upload a moment after you make them, and also when you come back online or return to the app. If the same prayer changed on two devices, the most recent change wins. Signing out removes your prayers from the device but not from your account.
 - **Small groups**: create a group, invite people with a link or QR code, and choose for each request whether only you see it or a group does too. Members tap "I prayed" (once a day per request), and the person who asked sees "You've been prayed for" on Today. Group leaders can rename the group, remove members, reset the invite link, or delete the group.
 - **Privacy**: enforced in the database (row-level security), not just the app. Only you can read your prayer rows. Group members see a shared request's title, details, updates and answer, never your follow-up dates, schedules or prayer counts. Members see your chosen display name, never your email. Leaving or deleting a group makes your shared requests private again. Signed-out visitors can read nothing.

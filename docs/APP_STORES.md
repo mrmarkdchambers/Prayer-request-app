@@ -66,7 +66,7 @@ stores require a contact address.
 
 ## 5. Sign-in for the apps
 
-The app signs people in with a 6-digit email code. Tapping a sign-in **link** opens the
+The app signs people in with a one-time email code (6–10 digits, set in Supabase). Tapping a sign-in **link** opens the
 website, not the app, so app users must be able to see the code:
 
 - Set up a custom email sender (SMTP) in Supabase, then edit the **Magic Link** and

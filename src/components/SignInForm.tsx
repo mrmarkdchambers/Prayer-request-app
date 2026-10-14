@@ -8,6 +8,7 @@ export function SignInForm({ intro }: { intro?: string }) {
   const [code, setCode] = useState('');
   const [step, setStep] = useState<'email' | 'code'>('email');
   const [busy, setBusy] = useState(false);
+  // Supabase projects can be set to send codes of 6 to 10 digits.
   const [error, setError] = useState<string | null>(null);
 
   const submitEmail = async (e: FormEvent) => {
@@ -54,15 +55,15 @@ export function SignInForm({ intro }: { intro?: string }) {
       ) : (
         <form className="stack-sm" onSubmit={submitCode}>
           <p>
-            Check <strong>{email}</strong>. Enter the 6-digit code from the email, or tap its sign-in link on this device.
+            Check <strong>{email}</strong>. Enter the code from the email, or tap its sign-in link on this device.
           </p>
           <label className="field">
             Code
             <input
               inputMode="numeric"
               autoComplete="one-time-code"
-              pattern="[0-9]{6}"
-              maxLength={6}
+              pattern="[0-9]{6,10}"
+              maxLength={10}
               required
               value={code}
               onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
@@ -70,7 +71,7 @@ export function SignInForm({ intro }: { intro?: string }) {
             />
           </label>
           <div className="row wrap">
-            <button type="submit" className="btn btn-primary" disabled={busy || code.length !== 6}>
+            <button type="submit" className="btn btn-primary" disabled={busy || code.length < 6}>
               {busy ? 'Checking…' : 'Sign in'}
             </button>
             <button type="button" className="link" onClick={() => setStep('email')}>
