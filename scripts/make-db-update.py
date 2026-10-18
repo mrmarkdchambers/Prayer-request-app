@@ -29,9 +29,12 @@ root = os.path.join(os.path.dirname(__file__), '..', 'supabase', 'migrations')
 files = sorted(glob.glob(os.path.join(root, '*.sql')))
 out = ['''-- Intercede database update. Paste ALL of this into Supabase -> SQL Editor -> New query, then Run.
 -- Safe to run more than once. The result at the bottom should show every row with present = true.
+-- Supabase warns about "destructive operations": the only one replaces a function with its new version; no data is removed.
 
 create schema if not exists supabase_migrations;
 create table if not exists supabase_migrations.schema_migrations (version text primary key, statements text[], name text);
+-- Only the database owner uses this table (owners bypass RLS); enabling it keeps the API out.
+alter table supabase_migrations.schema_migrations enable row level security;
 ''']
 for path in files:
     base = os.path.basename(path)
