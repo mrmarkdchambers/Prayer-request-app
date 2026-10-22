@@ -163,6 +163,10 @@ export function SettingsPage() {
         <Link to="/privacy">Read the full privacy policy</Link>
       </section>
 
+      <p className="muted center version">
+        {APP_NAME} version {__APP_VERSION__} · built {__BUILD_DATE__}
+      </p>
+
       <Dialog open={clearOpen} onClose={() => setClearOpen(false)} title="Delete all data?">
         <p>This permanently removes every prayer and setting from this browser. Back up first if you might want them later.</p>
         <div className="row">
