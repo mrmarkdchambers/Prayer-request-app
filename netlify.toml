@@ -8,7 +8,11 @@
 
 [build.environment]
   NODE_VERSION = "22"
-  # The Supabase settings come from .env.production, shared with the app builds.
+  # Same public values as .env.production. Repeated here because settings in this file
+  # take priority over Netlify's dashboard, where a blank variable of the same name
+  # would otherwise override .env.production and switch accounts off.
+  VITE_SUPABASE_URL = "https://vsvkvfwufcnyndtsfibg.supabase.co"
+  VITE_SUPABASE_ANON_KEY = "sb_publishable_U3qig2XIyLU7qpJq4AXhGQ__YMlLhkT"
 
 # The app uses #/ routes, so no redirect rules are needed.
 
