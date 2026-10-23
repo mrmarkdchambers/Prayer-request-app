@@ -10,7 +10,7 @@ If "Intercede" is already taken in a store, try **Intercede: Prayer List**.
 
 ## Subtitle (Apple, 30 max) / Short description (Google, 80 max)
 - Apple subtitle: `Prayer list & answered prayers` (30)
-- Google short description: `A private prayer list. Pray daily, pray with your group, remember answered prayers.` (80)
+- Google short description: `A private prayer list. Pray daily, pray with your group, remember answers.` (74)
 
 ## Description (Apple 4000 max · Google 4000 max)
 
@@ -51,8 +51,8 @@ Intercede is free, with every feature included.
 ```
 
 ## Keywords (Apple only, 100 max, comma-separated, no spaces needed)
-`prayer,prayer list,prayer journal,church,small group,bible,faith,christian,devotional,praise,answered`
-(99)
+`prayer list,prayer journal,church,small group,bible,faith,christian,devotional,praise,answered`
+(94; Apple matches single words too, so "prayer" is covered by "prayer list")
 
 ## Category
 - Apple: **Lifestyle** (secondary: **Reference** or leave empty)
