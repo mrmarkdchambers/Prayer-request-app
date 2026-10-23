@@ -23,6 +23,8 @@ interface Account {
   syncNow: () => Promise<void>;
   sendCode: (email: string) => Promise<void>;
   verifyCode: (email: string, code: string) => Promise<void>;
+  /** For accounts given a password in Supabase, e.g. the app-store review account. */
+  signInWithPassword: (email: string, password: string) => Promise<void>;
   /** Returns false (and stays signed in) if changes haven't uploaded, unless forced. */
   signOut: (force?: boolean) => Promise<boolean>;
   /** Permanently deletes the account and everything in it, then signs out. */
@@ -170,6 +172,11 @@ export function AccountProvider({ children }: { children: ReactNode }) {
           email: email.trim(),
           options: { emailRedirectTo: publicUrl, shouldCreateUser: true },
         });
+        if (error) throw error;
+      },
+      signInWithPassword: async (email, password) => {
+        if (!sb) return;
+        const { error } = await sb.auth.signInWithPassword({ email: email.trim(), password });
         if (error) throw error;
       },
       verifyCode: async (email, code) => {

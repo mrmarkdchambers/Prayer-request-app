@@ -1,0 +1,64 @@
+name: Android release
+
+# Builds the signed app bundle (.aab) to upload to Google Play.
+# Run it from the Actions tab: "Android release" → Run workflow.
+# Needs these repository secrets (Settings → Secrets and variables → Actions):
+#   ANDROID_KEYSTORE_BASE64   the upload keystore file, base64-encoded
+#   ANDROID_KEYSTORE_PASSWORD
+#   ANDROID_KEY_ALIAS
+#   ANDROID_KEY_PASSWORD
+#   GOOGLE_SERVICES_JSON      (optional) enables notifications
+# Without the keystore secrets it still builds, unsigned, to check everything compiles.
+on:
+  workflow_dispatch:
+    inputs:
+      version_name:
+        description: 'Version shown in the store, e.g. 1.0.0'
+        required: true
+        default: '1.0.0'
+
+jobs:
+  bundle:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - run: npm ci
+      - run: npm run build
+      - run: npx cap sync android
+      - name: Add Firebase config
+        env:
+          GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
+        if: env.GOOGLE_SERVICES_JSON != ''
+        run: echo "$GOOGLE_SERVICES_JSON" > android/app/google-services.json
+      - name: Restore upload key
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        if: env.ANDROID_KEYSTORE_BASE64 != ''
+        run: |
+          echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/upload.jks"
+          echo "ANDROID_KEYSTORE_PATH=$RUNNER_TEMP/upload.jks" >> "$GITHUB_ENV"
+      - name: Build app bundle
+        working-directory: android
+        env:
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        # The run number only goes up, which is what Google Play requires of versionCode.
+        run: ./gradlew bundleRelease -PversionCode=${{ github.run_number }} -PversionName=${{ inputs.version_name }}
+      - name: Note whether it's signed
+        run: |
+          if [ -n "$ANDROID_KEYSTORE_PATH" ]; then echo "::notice::Signed with your upload key, ready for Google Play (versionCode ${{ github.run_number }})."
+          else echo "::warning::Built without signing: add the keystore secrets to get a file Google Play accepts."; fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: intercede-${{ inputs.version_name }}-play-store
+          path: android/app/build/outputs/bundle/release/app-release.aab
+          retention-days: 30

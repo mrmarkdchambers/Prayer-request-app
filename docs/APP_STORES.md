@@ -72,19 +72,35 @@ website, not the app, so app users must be able to see the code:
 - Set up a custom email sender (SMTP) in Supabase, then edit the **Magic Link** and
   **Confirm signup** templates to include `{{ .Token }}` (see `supabase/templates/magic_link.html`).
 
-**App review:** Apple and Google reviewers need to try the signed-in features (groups, sync).
-They can't receive codes sent to your inbox, so the app needs a review account before
-submission. Ask Claude to add a reviewer sign-in when you get to this step.
+**App review account:** reviewers can't receive codes sent to your inbox, so they sign in
+with a password (Settings → Account → "Sign in with a password instead"). Only accounts you
+give a password can use it; everyone else keeps using email codes.
+
+1. Supabase → **Authentication → Users → Add user → Create new user**: an email you control
+   (e.g. a "+review" address on your sender Gmail), a strong password, and tick **Auto Confirm User**.
+2. Sign in to the app with it, set the name to "App Review", create a group called
+   "Review group" and add two or three sample requests and a praise report, so reviewers see real content.
+3. Put the email and password in the review notes (see `docs/STORE_LISTING.md`). Change the
+   password after review if you like.
 
 ## 6. Building releases
 
 ### Android (Google Play)
-1. Create an upload keystore once, and keep it and its passwords safe. If you lose it, you can't update the app:
+The **Android release** workflow builds the signed `.aab` on GitHub; no Android Studio needed.
+
+1. **Create an upload key once** and keep it, and its passwords, somewhere safe (a password
+   manager). With Play App Signing, Google holds the real signing key; if this upload key is
+   ever lost, Google can reset it, but that takes a few days.
    `keytool -genkey -v -keystore intercede-upload.jks -alias upload -keyalg RSA -keysize 2048 -validity 10000`
-2. `npm run build && npx cap sync android`, then open `android/` in Android Studio:
-   **Build → Generate Signed App Bundle** → `.aab`.
-   (A GitHub workflow can do this with the keystore stored as secrets; ask Claude to set it up.)
-3. In Play Console: create the app, then **Testing → Closed testing**: upload the `.aab` and invite 12+ testers.
+   (`keytool` comes with Java. Claude can also generate one for you.)
+2. Add these **repository secrets** (GitHub → Settings → Secrets and variables → Actions → New repository secret):
+   - `ANDROID_KEYSTORE_BASE64`: the keystore file in base64 (`base64 -w0 intercede-upload.jks` on Linux, `base64 -i intercede-upload.jks` on Mac)
+   - `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS` (`upload`), `ANDROID_KEY_PASSWORD`
+   - `GOOGLE_SERVICES_JSON`: the Firebase file's contents, for notifications
+3. GitHub → **Actions → Android release → Run workflow**, enter a version like `1.0.0`.
+   Download the `.aab` from the run's **Artifacts**. Each run gets a higher version code automatically.
+4. In Play Console: create the app, choose **Play App Signing** (default), then
+   **Testing → Closed testing**: upload the `.aab` and invite 12+ testers.
 
 ### iPhone (App Store)
 1. `npm run build && npx cap sync ios`, then open `ios/App/App.xcodeproj` in Xcode.

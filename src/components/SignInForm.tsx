@@ -1,12 +1,16 @@
 import { useState, type FormEvent } from 'react';
 import { useAccount } from '../sync/AccountProvider';
 
-/** Email sign-in with a one-time code (no password). The email also has a link for the same device. */
+/**
+ * Email sign-in with a one-time code (no password). The email also has a link for the same device.
+ * Accounts given a password in Supabase (the app-store review account) can use it instead.
+ */
 export function SignInForm({ intro }: { intro?: string }) {
-  const { sendCode, verifyCode } = useAccount();
+  const { sendCode, verifyCode, signInWithPassword } = useAccount();
+  const [password, setPassword] = useState('');
   const [email, setEmail] = useState('');
   const [code, setCode] = useState('');
-  const [step, setStep] = useState<'email' | 'code'>('email');
+  const [step, setStep] = useState<'email' | 'code' | 'password'>('email');
   const [busy, setBusy] = useState(false);
   // Supabase projects can be set to send codes of 6 to 10 digits.
   const [error, setError] = useState<string | null>(null);
@@ -20,6 +24,19 @@ export function SignInForm({ intro }: { intro?: string }) {
       setStep('code');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not send the code. Check your connection.');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const submitPassword = async (e: FormEvent) => {
+    e.preventDefault();
+    setBusy(true);
+    setError(null);
+    try {
+      await signInWithPassword(email, password);
+    } catch {
+      setError("That email and password didn't match. Most accounts sign in with an email code instead.");
     } finally {
       setBusy(false);
     }
@@ -51,6 +68,29 @@ export function SignInForm({ intro }: { intro?: string }) {
             {busy ? 'Sending…' : 'Email me a sign-in code'}
           </button>
           <p className="muted">No password needed. New here? This creates your free account.</p>
+          <button type="button" className="link muted align-start" onClick={() => setStep('password')}>
+            Sign in with a password instead
+          </button>
+        </form>
+      ) : step === 'password' ? (
+        <form className="stack-sm" onSubmit={submitPassword}>
+          <label className="field">
+            Email
+            <input type="email" required autoComplete="username" value={email} onChange={(e) => setEmail(e.target.value)} />
+          </label>
+          <label className="field">
+            Password
+            <input type="password" required autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} />
+          </label>
+          <div className="row wrap">
+            <button type="submit" className="btn btn-primary" disabled={busy || !email || !password}>
+              {busy ? 'Signing in…' : 'Sign in'}
+            </button>
+            <button type="button" className="link" onClick={() => setStep('email')}>
+              Use an email code instead
+            </button>
+          </div>
+          <p className="muted">Passwords are only set up for special accounts, like app review. Everyone else signs in with an email code.</p>
         </form>
       ) : (
         <form className="stack-sm" onSubmit={submitCode}>
